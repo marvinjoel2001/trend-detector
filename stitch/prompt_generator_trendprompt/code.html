@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TrendPrompt AI Engine | Prompt Generator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Manrope:wght@500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-fixed-variant": "#005561",
+                        "surface-container-high": "#141f38",
+                        "on-surface-variant": "#a3aac4",
+                        "on-surface": "#dee5ff",
+                        "surface": "#060e20",
+                        "on-tertiary-container": "#004b56",
+                        "on-tertiary-fixed": "#00363e",
+                        "on-secondary-fixed": "#4f0089",
+                        "secondary-fixed": "#e5c6ff",
+                        "surface-container": "#0f1930",
+                        "on-primary-fixed": "#000000",
+                        "secondary-dim": "#9c48ea",
+                        "tertiary-fixed-dim": "#1ad0eb",
+                        "primary-dim": "#8a95ff",
+                        "primary-fixed-dim": "#7f8af6",
+                        "surface-variant": "#192540",
+                        "inverse-surface": "#faf8ff",
+                        "primary-container": "#8d98ff",
+                        "inverse-on-surface": "#4d556b",
+                        "on-background": "#dee5ff",
+                        "surface-container-highest": "#192540",
+                        "surface-bright": "#1f2b49",
+                        "secondary-container": "#6f00be",
+                        "on-secondary": "#33005b",
+                        "surface-dim": "#060e20",
+                        "secondary-fixed-dim": "#dbb4ff",
+                        "surface-container-low": "#091328",
+                        "primary": "#9fa7ff",
+                        "surface-tint": "#9fa7ff",
+                        "on-error-container": "#ffb2b9",
+                        "primary-fixed": "#8d98ff",
+                        "error-container": "#a70138",
+                        "tertiary-fixed": "#3adffa",
+                        "outline": "#6d758c",
+                        "inverse-primary": "#4954bc",
+                        "error-dim": "#d73357",
+                        "on-error": "#490013",
+                        "surface-container-lowest": "#000000",
+                        "on-tertiary": "#005561",
+                        "secondary": "#c180ff",
+                        "tertiary": "#7de9ff",
+                        "on-primary-fixed-variant": "#0c1889",
+                        "background": "#060e20",
+                        "on-primary-container": "#000a7b",
+                        "on-secondary-container": "#e9cdff",
+                        "on-secondary-fixed-variant": "#7511c3",
+                        "on-primary": "#101b8b",
+                        "tertiary-dim": "#1ad0eb",
+                        "tertiary-container": "#3adffa",
+                        "outline-variant": "#40485d",
+                        "error": "#ff6e84"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { background-color: #060e20; }
+        .glass-panel {
+            backdrop-filter: blur(20px);
+            background: rgba(25, 37, 64, 0.4);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="font-body text-on-surface antialiased overflow-x-hidden">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r border-slate-400/10 bg-slate-950/40 backdrop-blur-xl flex flex-col p-6 z-50">
+<div class="mb-10 px-2">
+<h1 class="text-2xl font-black tracking-tighter bg-gradient-to-br from-indigo-400 to-purple-400 bg-clip-text text-transparent">TrendPrompt</h1>
+<p class="text-[10px] uppercase tracking-[0.2em] text-indigo-400/60 font-bold">AI Engine</p>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-['Manrope'] text-sm font-medium tracking-tight">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
+<span class="font-['Manrope'] text-sm font-medium tracking-tight">Live Trends</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/10 backdrop-blur-md text-white shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-['Manrope'] text-sm font-medium tracking-tight">Prompt Generator</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-['Manrope'] text-sm font-medium tracking-tight">History</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="timeline">timeline</span>
+<span class="font-['Manrope'] text-sm font-medium tracking-tight">Forecast</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-white/5">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-['Manrope'] text-sm font-medium tracking-tight">Settings</span>
+</a>
+<div class="mt-4 flex items-center gap-3 px-4">
+<div class="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-secondary p-[1px]">
+<img alt="User profile avatar" class="w-full h-full rounded-full object-cover" data-alt="Close up portrait of a young professional with clean lighting and minimalist background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANzan0JUUpW1-ze3Ei88a-7pPHUJEJwW-qV4dnsLgnnua0OQTWMJxthpjoiK10plzP9Dv2kXgHbLt-BGX075dByH1-cLHvSM_FNk0Umj7xGOqxZ1sZY-xIZPw39-p6mUcOykW2QVKqa_SyfjVi_AxeEwNJz_LdHTztO_l-R7xXis9VuVbahFRqTBX7aNKhEHdETUW0dFayWBFBc56UjZfNmGQjRkQxhG6PFmV2hgxGOlMPd5atD1EqqkHtbO8_HDSoLdTlbUPINvZ_"/>
+</div>
+<div class="flex flex-col">
+<span class="text-xs font-bold text-white">Alex Rivers</span>
+<span class="text-[10px] text-slate-500">Pro Plan</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="ml-64 min-h-screen relative">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-slate-950/20 backdrop-blur-md z-40 flex justify-between items-center px-8 border-b border-white/5">
+<div class="flex items-center flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">search</span>
+<input class="w-full bg-surface-container-lowest border-none rounded-full py-2 pl-10 pr-4 text-sm text-on-surface focus:ring-1 focus:ring-indigo-500/50 transition-all outline-none" placeholder="Search trends or prompts..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-slate-400 hover:text-white transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-secondary rounded-full border border-surface"></span>
+</button>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+</header>
+<!-- Content Area -->
+<div class="pt-24 px-10 pb-12 max-w-7xl mx-auto">
+<header class="mb-10">
+<h2 class="font-headline text-4xl font-extrabold tracking-tight text-on-surface mb-2">Prompt Generator</h2>
+<p class="text-on-surface-variant max-w-2xl">Transform raw trend data into viral hooks and content scripts using the TrendPrompt AI core engine.</p>
+</header>
+<!-- Main Split Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Left: Trend Summary Card -->
+<section class="lg:col-span-5 space-y-6">
+<div class="glass-panel p-8 rounded-lg border border-white/5 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.5)]">
+<div class="flex justify-between items-start mb-6">
+<div>
+<span class="text-[10px] font-bold text-secondary tracking-widest uppercase">Active Trend</span>
+<h3 class="font-headline text-2xl font-bold mt-1">Ethereal Tech Aesthetics</h3>
+</div>
+<div class="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold">
+                                +124% Velocity
+                            </div>
+</div>
+<div class="space-y-6">
+<div class="relative h-48 rounded-2xl overflow-hidden group">
+<img alt="Trend Visual" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" data-alt="Abstract 3D render of flowing iridescent silk in deep violet and indigo space with floating crystal particles" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYqvHorsA77LUHQ5biXE98BqI-wC4K9a69cU2RuwG3qHwsQU0gKYHhv3xyaikMYfWVsmn5nQiNk_4T6DGKu7hIuW3GJzoKuNXCqgKKb9TA5H1YTZ8HWECYmQEb1TqmrxuHGV6sOYeq2YZ8saKr6j_sD44_2e330bvHW8gqLAAablHUvrRx51doKqkSedMwCsapEnPvMWtLVbjHUI9wp6FugfB7TdudYP9MdeOQC5fAAkpuyZ7pRnmVOR9qS8C7uf8kGH6lW6JALi2u"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-dim to-transparent opacity-60"></div>
+<div class="absolute bottom-4 left-4">
+<div class="flex gap-2">
+<span class="bg-white/10 backdrop-blur-md px-2 py-1 rounded text-[10px] border border-white/10">#NeoMinimalism</span>
+<span class="bg-white/10 backdrop-blur-md px-2 py-1 rounded text-[10px] border border-white/10">#SpatialDesign</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-4 rounded-2xl bg-surface-container-low border border-white/5">
+<p class="text-[10px] text-on-surface-variant font-medium">Core Sentiment</p>
+<p class="text-sm font-bold mt-1">Nostalgic-Futurism</p>
+</div>
+<div class="p-4 rounded-2xl bg-surface-container-low border border-white/5">
+<p class="text-[10px] text-on-surface-variant font-medium">Top Geo</p>
+<p class="text-sm font-bold mt-1">South Korea, USA</p>
+</div>
+</div>
+<div class="pt-4">
+<p class="text-xs text-on-surface-variant leading-relaxed italic">
+                                    "This trend is characterized by soft gradients, translucent textures, and a return to high-gloss interfaces reminiscent of 2000s computing, updated with modern spatial depth."
+                                </p>
+</div>
+</div>
+</div>
+<!-- Additional Context Card -->
+<div class="p-6 rounded-lg bg-surface-container border border-white/5">
+<div class="flex items-center gap-3 mb-4 text-tertiary">
+<span class="material-symbols-outlined text-lg">lightbulb</span>
+<h4 class="text-sm font-bold uppercase tracking-wider">Strategy Insight</h4>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                            Focus on "high-definition tactile" visuals. Use the prompt to emphasize how the product feels to the touch within a digital space.
+                        </p>
+</div>
+</section>
+<!-- Right: Prompt Output Card -->
+<section class="lg:col-span-7 space-y-6">
+<div class="glass-panel p-8 rounded-lg border border-white/5 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.5),0_0_20px_rgba(159,167,255,0.05)]">
+<!-- Controls -->
+<div class="flex flex-wrap items-center gap-4 mb-8">
+<div class="flex-1 min-w-[140px]">
+<label class="block text-[10px] font-bold text-on-surface-variant mb-2 uppercase">Platform</label>
+<div class="relative">
+<select class="w-full bg-surface-container-lowest border border-outline-variant/15 rounded-xl px-4 py-2.5 text-sm appearance-none focus:ring-1 focus:ring-primary outline-none">
+<option>TikTok</option>
+<option>Instagram Reels</option>
+<option>YouTube Shorts</option>
+<option>LinkedIn</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">expand_more</span>
+</div>
+</div>
+<div class="flex-1 min-w-[140px]">
+<label class="block text-[10px] font-bold text-on-surface-variant mb-2 uppercase">Output Type</label>
+<div class="relative">
+<select class="w-full bg-surface-container-lowest border border-outline-variant/15 rounded-xl px-4 py-2.5 text-sm appearance-none focus:ring-1 focus:ring-primary outline-none">
+<option>Video Script</option>
+<option>Image Prompt</option>
+<option>Audio Narration</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">expand_more</span>
+</div>
+</div>
+<div class="flex items-end h-full pt-6">
+<button class="h-[42px] px-6 rounded-full bg-gradient-to-r from-primary to-secondary text-on-primary font-bold text-sm shadow-[0_0_15px_rgba(159,167,255,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all">
+                                    Generate
+                                </button>
+</div>
+</div>
+<!-- Prompt Area -->
+<div class="relative group">
+<label class="block text-[10px] font-bold text-on-surface-variant mb-2 uppercase">Generated Prompt</label>
+<div class="bg-surface-container-lowest rounded-2xl p-6 min-h-[240px] border border-white/5 ring-1 ring-white/5 focus-within:ring-primary/50 transition-all">
+<p class="text-on-surface leading-relaxed text-lg font-medium">
+                                    [HOOK: The Interface is Breathing] 
+                                    <br/><br/>
+                                    "Imagine a world where your digital tools aren't just pixels, but a tactile extension of your workspace. We're seeing a massive shift towards #EtherealTech—where UI meets sensory experience."
+                                    <br/><br/>
+                                    [SCENE: Close-up macro shots of frosted glass UI elements drifting in a slow-motion orbit. Lighting should be low-key with 135-degree violet rim lights.]
+                                    <br/><br/>
+                                    "Don't just build features. Build atmospheres. This is how the future feels."
+                                </p>
+</div>
+<div class="absolute top-10 right-4 flex flex-col gap-2">
+<button class="p-2.5 bg-surface-bright rounded-xl border border-white/5 text-on-surface-variant hover:text-white transition-all shadow-lg">
+<span class="material-symbols-outlined" data-icon="content_copy">content_copy</span>
+</button>
+<button class="p-2.5 bg-surface-bright rounded-xl border border-white/5 text-on-surface-variant hover:text-white transition-all shadow-lg">
+<span class="material-symbols-outlined" data-icon="refresh">refresh</span>
+</button>
+</div>
+</div>
+<!-- Bottom Section: Suggestions -->
+<div class="mt-8 pt-8 border-t border-white/5 grid grid-cols-1 md:grid-cols-3 gap-6">
+<div>
+<p class="text-[10px] font-bold text-on-surface-variant uppercase mb-3">Hashtag Stack</p>
+<div class="flex flex-wrap gap-2">
+<span class="text-xs font-semibold text-primary">#TechDesign</span>
+<span class="text-xs font-semibold text-primary">#GenZTech</span>
+<span class="text-xs font-semibold text-primary">#UIAesthetic</span>
+</div>
+</div>
+<div>
+<p class="text-[10px] font-bold text-on-surface-variant uppercase mb-3">Best Posting Time</p>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-lg">schedule</span>
+<span class="text-sm font-bold">Today, 8:45 PM EST</span>
+</div>
+</div>
+<div>
+<p class="text-[10px] font-bold text-on-surface-variant uppercase mb-3">Rec. Duration</p>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-lg">timer</span>
+<span class="text-sm font-bold">14 — 18 Seconds</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Bar -->
+<div class="flex justify-end gap-4">
+<button class="px-8 py-3 rounded-full bg-surface-variant/40 backdrop-blur-md border border-white/10 text-on-surface text-sm font-bold hover:bg-surface-variant/60 transition-all">
+                            Save to Library
+                        </button>
+<button class="px-8 py-3 rounded-full bg-white text-surface text-sm font-bold shadow-[0_10px_20px_rgba(255,255,255,0.1)] hover:shadow-[0_15px_30px_rgba(255,255,255,0.2)] transition-all">
+                            Export Project
+                        </button>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- Background Decorative Gradients -->
+<div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+<div class="fixed bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-secondary/10 rounded-full blur-[150px] pointer-events-none -z-10"></div>
+<div class="fixed top-[30%] right-[10%] w-[20%] h-[20%] bg-tertiary/10 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+</body></html>

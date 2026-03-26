@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TrendPrompt | Live Trends</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed-variant": "#005561",
+              "surface-container-high": "#141f38",
+              "on-surface-variant": "#a3aac4",
+              "on-surface": "#dee5ff",
+              "surface": "#060e20",
+              "on-tertiary-container": "#004b56",
+              "on-tertiary-fixed": "#00363e",
+              "on-secondary-fixed": "#4f0089",
+              "secondary-fixed": "#e5c6ff",
+              "surface-container": "#0f1930",
+              "on-primary-fixed": "#000000",
+              "secondary-dim": "#9c48ea",
+              "tertiary-fixed-dim": "#1ad0eb",
+              "primary-dim": "#8a95ff",
+              "primary-fixed-dim": "#7f8af6",
+              "surface-variant": "#192540",
+              "inverse-surface": "#faf8ff",
+              "primary-container": "#8d98ff",
+              "inverse-on-surface": "#4d556b",
+              "on-background": "#dee5ff",
+              "surface-container-highest": "#192540",
+              "surface-bright": "#1f2b49",
+              "secondary-container": "#6f00be",
+              "on-secondary": "#33005b",
+              "surface-dim": "#060e20",
+              "secondary-fixed-dim": "#dbb4ff",
+              "surface-container-low": "#091328",
+              "primary": "#9fa7ff",
+              "surface-tint": "#9fa7ff",
+              "on-error-container": "#ffb2b9",
+              "primary-fixed": "#8d98ff",
+              "error-container": "#a70138",
+              "tertiary-fixed": "#3adffa",
+              "outline": "#6d758c",
+              "inverse-primary": "#4954bc",
+              "error-dim": "#d73357",
+              "on-error": "#490013",
+              "surface-container-lowest": "#000000",
+              "on-tertiary": "#005561",
+              "secondary": "#c180ff",
+              "tertiary": "#7de9ff",
+              "on-primary-fixed-variant": "#0c1889",
+              "background": "#060e20",
+              "on-primary-container": "#000a7b",
+              "on-secondary-container": "#e9cdff",
+              "on-secondary-fixed-variant": "#7511c3",
+              "on-primary": "#101b8b",
+              "tertiary-dim": "#1ad0eb",
+              "tertiary-container": "#3adffa",
+              "outline-variant": "#40485d",
+              "error": "#ff6e84"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #060e20;
+            color: #dee5ff;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-panel {
+            backdrop-filter: blur(20px);
+            background: rgba(25, 37, 64, 0.4);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .velocity-glow {
+            text-shadow: 0 0 12px rgba(193, 128, 255, 0.6);
+        }
+    </style>
+</head>
+<body class="overflow-hidden">
+<!-- Background Atmospheric Elements -->
+<div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+<div class="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-secondary/10 blur-[120px]"></div>
+<div class="absolute bottom-[-5%] left-[10%] w-[400px] h-[400px] rounded-full bg-primary/5 blur-[100px]"></div>
+</div>
+<!-- SideNavBar (JSON Derived) -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r border-slate-400/10 bg-slate-950/40 backdrop-blur-xl flex flex-col h-full p-6 z-50">
+<div class="mb-10">
+<h1 class="text-2xl font-black tracking-tighter bg-gradient-to-br from-indigo-400 to-purple-400 bg-clip-text text-transparent">TrendPrompt</h1>
+<p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">AI Engine</p>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-200 transition-colors hover:bg-white/5" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-['Manrope'] text-sm font-medium tracking-tight">Dashboard</span>
+</a>
+<!-- Active Tab: Live Trends -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/10 backdrop-blur-md text-white shadow-[0_0_15px_rgba(99,102,241,0.3)] scale-98 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
+<span class="font-['Manrope'] text-sm font-medium tracking-tight">Live Trends</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-200 transition-colors hover:bg-white/5" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-['Manrope'] text-sm font-medium tracking-tight">Prompt Generator</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-200 transition-colors hover:bg-white/5" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-['Manrope'] text-sm font-medium tracking-tight">History</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-200 transition-colors hover:bg-white/5" href="#">
+<span class="material-symbols-outlined" data-icon="timeline">timeline</span>
+<span class="font-['Manrope'] text-sm font-medium tracking-tight">Forecast</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-200 transition-colors hover:bg-white/5" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-['Manrope'] text-sm font-medium tracking-tight">Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-white/5 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-variant overflow-hidden">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="minimalist 3d avatar of a young creative professional with glasses and a stylish haircut in a tech-focused studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlaB74Bl4Tx4gRn2UeRnBM2nMpNzOr4-S6_gJb8ytU-DyhhNySh001KHVN1syU8aNp98gLBNZbRlvyKCsFgJxMIkmwCAAjpt2_7m6HGbvjW5M861eVzP_4wgeHgoXRddVD4Z8UaxGqVBNCO4hFQp3E3SmJwPY4cfwwlxtqq3x4xEaFXZLwWPnmnzMRUze9la_c90jEaITTEY1zHbLBA3queGC2yL8n8JEP6vt_Ll_EHqoO6pF8qnWq2I3mTQPnv-6DGNFpixvb9YeB"/>
+</div>
+<div class="overflow-hidden">
+<p class="text-sm font-semibold truncate">Alex Rivera</p>
+<p class="text-[10px] text-slate-500 truncate">Pro Account</p>
+</div>
+</div>
+</aside>
+<!-- TopNavBar (JSON Derived) -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-slate-950/20 backdrop-blur-md border-b border-white/5 flex justify-between items-center px-8 z-40">
+<div class="flex items-center flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">search</span>
+<input class="w-full bg-surface-container-lowest border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-slate-600" placeholder="Search signals..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 text-slate-400">
+<button class="hover:text-white transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="hover:text-white transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+<div class="h-8 w-px bg-white/10"></div>
+<div class="flex items-center gap-3">
+<div class="flex flex-col items-end">
+<span class="text-xs font-bold text-on-surface">Live Feed</span>
+<span class="text-[10px] text-primary">Active now</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content: Live Stream -->
+<main class="ml-64 pt-16 h-screen flex flex-col">
+<!-- Dashboard Header -->
+<div class="px-10 pt-8 flex justify-between items-end">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-error-container/20 border border-error/20">
+<span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>
+<span class="text-[10px] font-black tracking-widest text-error-dim uppercase">● LIVE</span>
+</div>
+<span class="text-xs text-on-surface-variant font-medium tracking-tight">Syncing with global clusters...</span>
+</div>
+<h2 class="text-4xl font-headline font-extrabold tracking-tight text-on-surface">Global Trend Stream</h2>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 rounded-full glass-panel border border-white/5 text-xs font-semibold text-on-surface hover:bg-surface-variant transition-all">
+<span class="material-symbols-outlined text-sm">filter_list</span> Filters
+                </button>
+<button class="flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-primary to-secondary text-on-primary-fixed text-xs font-bold shadow-[0_4px_15px_rgba(159,167,255,0.3)] hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-sm">download</span> Export Report
+                </button>
+</div>
+</div>
+<!-- Vertical Stream Container -->
+<div class="flex-1 overflow-y-auto px-10 pt-8 pb-20 scroll-smooth">
+<div class="max-w-4xl mx-auto space-y-6">
+<!-- Incoming Trend Card (Slide-in simulation via top placement) -->
+<div class="group relative p-6 rounded-lg glass-panel border border-white/5 hover:border-primary/20 transition-all duration-500 overflow-hidden">
+<div class="absolute top-0 right-0 p-4">
+<div class="flex flex-col items-end">
+<span class="text-[10px] font-bold text-primary tracking-widest uppercase mb-1">Velocity Score</span>
+<span class="text-3xl font-headline font-black text-secondary velocity-glow tracking-tighter">98.4</span>
+</div>
+</div>
+<div class="flex gap-6 items-start">
+<div class="w-24 h-24 rounded-lg bg-surface-container-highest flex-shrink-0 relative overflow-hidden">
+<img alt="Trend visual" class="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" data-alt="abstract neural network visualization with glowing purple paths and cinematic cyan particles against deep cosmic black background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoh5YN0G01ZJslidszdCU4JidgNp6xs7hnGHeFPbW8fkBBvlSPf98GGfUjQmPLOe7K-_1OLCrxthuO9yKh9zUTQAg9bmK-Not23i5UXesGeheioHBQOEjISbXvk0AZ18XvevL7TBVWVOppjo_B_rX6bvQ4MC_4lRqWwYwCVNbxvfOVXrIjQ7jGK8WM4F8W_2iztZsGb8df6wc7uqgs-e8-YHMSDrY8W3aEc90kcz6Wa34XqWH4T0r5EfylVyil6t0MSrEjf4sdQZuM"/>
+</div>
+<div class="flex-1 pr-24">
+<div class="flex items-center gap-3 mb-2">
+<span class="px-2 py-0.5 rounded-sm bg-tertiary/10 text-tertiary text-[10px] font-bold tracking-wider uppercase">Generative AI</span>
+<span class="text-slate-500 text-[10px]">Just Now</span>
+</div>
+<h3 class="text-xl font-headline font-bold text-on-surface mb-2 group-hover:text-primary transition-colors">Neural Symbiosis Pipelines</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed line-clamp-2 max-w-lg">Real-time collaboration between disparate LLM architectures is seeing a 400% uptick in enterprise adoption this quarter.</p>
+<div class="mt-4 flex gap-4">
+<div class="flex items-center gap-1.5 text-xs text-slate-400">
+<span class="material-symbols-outlined text-sm" data-icon="share">share</span> 1.2k
+                                </div>
+<div class="flex items-center gap-1.5 text-xs text-slate-400">
+<span class="material-symbols-outlined text-sm" data-icon="forum">forum</span> 84
+                                </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Trend Card 2 -->
+<div class="group relative p-6 rounded-lg glass-panel border border-white/5 hover:border-primary/20 transition-all duration-500 overflow-hidden">
+<div class="absolute top-0 right-0 p-4">
+<div class="flex flex-col items-end">
+<span class="text-[10px] font-bold text-primary tracking-widest uppercase mb-1">Velocity Score</span>
+<span class="text-3xl font-headline font-black text-tertiary velocity-glow tracking-tighter">82.1</span>
+</div>
+</div>
+<div class="flex gap-6 items-start opacity-90">
+<div class="w-24 h-24 rounded-lg bg-surface-container-highest flex-shrink-0 relative overflow-hidden">
+<img alt="Trend visual" class="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" data-alt="futuristic sustainable urban landscape with glowing bio-luminescent vertical gardens and sleek holographic interfaces in a misty night setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIfncy6Q16M7HF4kTyHa3cf8hvtgsjULRRkGX8BIu86xIhjEGNPN-8lC0Cpi7TKv2sd7IyFs_yUcmoo3Yyl9EZSBPboGFch8fkieVw6BhMpDsCUPplC2-waxDXjp2TSW37rCiVoPXgvvfefSUlpJI31xEC5sRSWhoymDivfd8qaM6Ks5oPUJB8Fq5v9II5JdfFw-zeayROnSUlOFuYfLSVkGJGU2fBWWkUnfETQNOI8pvvJ1erfJB5LVGoPjGUzD3Mg-dDCnEaya0N"/>
+</div>
+<div class="flex-1 pr-24">
+<div class="flex items-center gap-3 mb-2">
+<span class="px-2 py-0.5 rounded-sm bg-secondary/10 text-secondary text-[10px] font-bold tracking-wider uppercase">Eco-Tech</span>
+<span class="text-slate-500 text-[10px]">2 mins ago</span>
+</div>
+<h3 class="text-xl font-headline font-bold text-on-surface mb-2">Bioluminescent Infrastructure</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed line-clamp-2 max-w-lg">European municipalities are testing genetically modified moss as a zero-energy lighting alternative for public spaces.</p>
+<div class="mt-4 flex gap-4">
+<div class="flex items-center gap-1.5 text-xs text-slate-400">
+<span class="material-symbols-outlined text-sm" data-icon="share">share</span> 3.4k
+                                </div>
+<div class="flex items-center gap-1.5 text-xs text-slate-400">
+<span class="material-symbols-outlined text-sm" data-icon="forum">forum</span> 210
+                                </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Trend Card 3 (Bento Style Variation) -->
+<div class="grid grid-cols-2 gap-6">
+<div class="group relative p-6 rounded-lg glass-panel border border-white/5 hover:border-primary/20 transition-all duration-500">
+<div class="flex justify-between items-start mb-6">
+<span class="px-2 py-0.5 rounded-sm bg-primary/10 text-primary text-[10px] font-bold tracking-wider uppercase">FinTech</span>
+<span class="text-2xl font-black text-primary tracking-tighter">75.0</span>
+</div>
+<h3 class="text-lg font-headline font-bold text-on-surface mb-2">Fragmented Ownership</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">Fractional asset liquidation protocols are bridging the gap between high-yield real estate and retail micro-investing.</p>
+<div class="mt-4 flex items-center justify-between">
+<div class="flex -space-x-2">
+<img alt="user" class="w-6 h-6 rounded-full border border-surface" data-alt="profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCODgWzZKA6DiB0H0B49ny99b3x7qf91z9F13EM5gi-yhE8vcLcDcffDBDAkBGQU3ltXSpTuRH03dXQuI9Eg-skbgHFnzyiydaEg38nZqnthOjEbsp7Xbpo5bRDIgU0Y46hpgJid1GYzUKwJMCrBUOwVE85UMndSas10NOdcH0F3LyJNTN3ytoZMIvsqIKjo2xYjwitIjvab5UVhn81d1lLN5GkaAHxP-pLXmxgq49zY2aJS_RI5-OWFKdKh-9_RGuxVmE_JhHQp7x1"/>
+<img alt="user" class="w-6 h-6 rounded-full border border-surface" data-alt="profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXFgwYalhlB9jx_57_8pWnHiiQHsYCMUkAOLcWZ5cXBrx9h6795hJToCq8ZHYy7caeDKsyE_OTJmVuu0ws24FeVQaEuDvrQ1nu-_waKQrIBRDAuRwgw4wqgb_aWzSMN8RBzTKcwHpP_B_wSYNFn2W437Fj86JEuxr2XEeJ5eUuP10S70dLpq8daNG_myQSayzOx1hhWXaGxoGRuekE1l-EOeBg6rsb5ziMUd3NLDt07Bw_rIfsewfN-IenhQu4tfuynDBaeCVzyQQf"/>
+<img alt="user" class="w-6 h-6 rounded-full border border-surface" data-alt="profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoDgcFUt4nbXqK3X3QnprFiiojVLnCG6ehS7NkZtVDcMC5jbHai7pPGdSp6buEIHTHOHNP4B8b4vCTTyXuL4nZV42y7SnB0_7SqLVTbQ6ThRl_TdQDo2NLi2BEf-j4H7OOLklQD5If9mZo_Mefnnq4JIMHnChDrkM1xNG_9YG55LhK1LAGvWU--BmrCK5YmBMto4r8maXw7F8TCafav_CfuzfkLujqdyaEivLdMGqtwgaCmJ3Ybixj3f8XkE1oUNA2AKV9XK3LBsMW"/>
+</div>
+<span class="text-[10px] font-bold text-tertiary">EXPLODING</span>
+</div>
+</div>
+<div class="group relative p-6 rounded-lg glass-panel border border-white/5 hover:border-primary/20 transition-all duration-500">
+<div class="flex justify-between items-start mb-6">
+<span class="px-2 py-0.5 rounded-sm bg-error/10 text-error text-[10px] font-bold tracking-wider uppercase">CyberSec</span>
+<span class="text-2xl font-black text-error-dim tracking-tighter">64.9</span>
+</div>
+<h3 class="text-lg font-headline font-bold text-on-surface mb-2">Post-Quantum Keys</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">Recent breakthroughs in lattice-based cryptography are forcing a total overhaul of standard SSL/TLS certification standards.</p>
+<div class="mt-4 h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-error-dim w-2/3 shadow-[0_0_8px_rgba(215,51,87,0.5)]"></div>
+</div>
+</div>
+</div>
+<!-- Trend Card 4 -->
+<div class="group relative p-6 rounded-lg glass-panel border border-white/5 hover:border-primary/20 transition-all duration-500 overflow-hidden">
+<div class="absolute top-0 right-0 p-4">
+<div class="flex flex-col items-end">
+<span class="text-[10px] font-bold text-primary tracking-widest uppercase mb-1">Velocity Score</span>
+<span class="text-3xl font-headline font-black text-secondary velocity-glow tracking-tighter">89.2</span>
+</div>
+</div>
+<div class="flex gap-6 items-start opacity-80">
+<div class="w-24 h-24 rounded-lg bg-surface-container-highest flex-shrink-0 relative overflow-hidden">
+<img alt="Trend visual" class="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" data-alt="extreme close-up of iridescent liquid metal morphing into complex geometric shapes with hyper-realistic chrome reflections and soft bokeh" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJAGkUPcEhygA81fcmshiPuORBbQm5W4vpgL02yRsyCytRPZO_zOINLMunhHJZSPaK56RnlpGNmoOlpxBr8kFdvdsVs7UjlwMGZ9myPJkfLxX0UHg_QdWqgX-KQB2efsRyvj9UfYJ2K8BWQUBRQU7n82GHffGiS68bn2wYKLo63XftBcdlJPHOT-9I2CUwC-IQrnrPa4p5qpczSNyydAqDCelysLr_nKjFQvPURAGVM--GmdIdi1ig9Nw1jnQwvvOcL54KoTBsrdt-"/>
+</div>
+<div class="flex-1 pr-24">
+<div class="flex items-center gap-3 mb-2">
+<span class="px-2 py-0.5 rounded-sm bg-tertiary/10 text-tertiary text-[10px] font-bold tracking-wider uppercase">Industrial Design</span>
+<span class="text-slate-500 text-[10px]">14 mins ago</span>
+</div>
+<h3 class="text-xl font-headline font-bold text-on-surface mb-2">Liquid Morphology</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed line-clamp-2 max-w-lg">New programmable matter interfaces are allowing consumer electronics to physically reshape based on user ergonomic profiles.</p>
+<div class="mt-4 flex gap-4">
+<div class="flex items-center gap-1.5 text-xs text-slate-400">
+<span class="material-symbols-outlined text-sm" data-icon="share">share</span> 921
+                                </div>
+<div class="flex items-center gap-1.5 text-xs text-slate-400">
+<span class="material-symbols-outlined text-sm" data-icon="forum">forum</span> 32
+                                </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Loading Indicator -->
+<div class="py-10 flex flex-col items-center gap-4">
+<div class="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+<p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">Listening for signals...</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Right Sidebar: Velocity Heatmap (Floating) -->
+<aside class="fixed top-20 right-8 w-72 h-[calc(100vh-8rem)] glass-panel rounded-2xl border border-white/5 p-6 z-30 hidden xl:flex flex-col">
+<h4 class="text-xs font-black uppercase tracking-widest text-slate-500 mb-6">Velocity Heatmap</h4>
+<div class="flex-1 space-y-6">
+<div class="space-y-2">
+<div class="flex justify-between text-[10px] font-bold">
+<span class="text-on-surface">SILICON VALLEY</span>
+<span class="text-primary">94%</span>
+</div>
+<div class="h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[94%] shadow-[0_0_10px_rgba(159,167,255,0.4)]"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-[10px] font-bold">
+<span class="text-on-surface">SHENZHEN</span>
+<span class="text-secondary">88%</span>
+</div>
+<div class="h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[88%] shadow-[0_0_10px_rgba(193,128,255,0.4)]"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-[10px] font-bold">
+<span class="text-on-surface">LONDON</span>
+<span class="text-tertiary">76%</span>
+</div>
+<div class="h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-tertiary w-[76%] shadow-[0_0_10px_rgba(125,233,255,0.4)]"></div>
+</div>
+</div>
+<div class="mt-8 p-4 rounded-xl bg-surface-container-lowest/50 border border-white/5">
+<p class="text-[10px] text-slate-500 leading-relaxed italic">"The current cluster is observing a significant shift in 'Biological Computing' keywords across scientific pre-prints."</p>
+<div class="mt-3 flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-secondary"></div>
+<span class="text-[9px] font-bold text-secondary uppercase tracking-widest">Prediction Confirmed</span>
+</div>
+</div>
+</div>
+<div class="mt-auto space-y-4">
+<div class="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 text-center">
+<p class="text-[10px] font-bold text-on-surface mb-2">AI ENGINE STATUS</p>
+<div class="flex justify-center gap-1">
+<div class="w-1 h-3 bg-primary/40 rounded-full animate-[bounce_1s_infinite]"></div>
+<div class="w-1 h-5 bg-primary rounded-full animate-[bounce_1.2s_infinite]"></div>
+<div class="w-1 h-2 bg-primary/60 rounded-full animate-[bounce_0.8s_infinite]"></div>
+<div class="w-1 h-4 bg-primary rounded-full animate-[bounce_1.1s_infinite]"></div>
+<div class="w-1 h-3 bg-primary/50 rounded-full animate-[bounce_0.9s_infinite]"></div>
+</div>
+</div>
+</div>
+</aside>
+</body></html>

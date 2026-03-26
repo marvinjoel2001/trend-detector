@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TrendPrompt Engine - Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-fixed-variant": "#005561",
+                        "surface-container-high": "#141f38",
+                        "on-surface-variant": "#a3aac4",
+                        "on-surface": "#dee5ff",
+                        "surface": "#060e20",
+                        "on-tertiary-container": "#004b56",
+                        "on-tertiary-fixed": "#00363e",
+                        "on-secondary-fixed": "#4f0089",
+                        "secondary-fixed": "#e5c6ff",
+                        "surface-container": "#0f1930",
+                        "on-primary-fixed": "#000000",
+                        "secondary-dim": "#9c48ea",
+                        "tertiary-fixed-dim": "#1ad0eb",
+                        "primary-dim": "#8a95ff",
+                        "primary-fixed-dim": "#7f8af6",
+                        "surface-variant": "#192540",
+                        "inverse-surface": "#faf8ff",
+                        "primary-container": "#8d98ff",
+                        "inverse-on-surface": "#4d556b",
+                        "on-background": "#dee5ff",
+                        "surface-container-highest": "#192540",
+                        "surface-bright": "#1f2b49",
+                        "secondary-container": "#6f00be",
+                        "on-secondary": "#33005b",
+                        "surface-dim": "#060e20",
+                        "secondary-fixed-dim": "#dbb4ff",
+                        "surface-container-low": "#091328",
+                        "primary": "#9fa7ff",
+                        "surface-tint": "#9fa7ff",
+                        "on-error-container": "#ffb2b9",
+                        "primary-fixed": "#8d98ff",
+                        "error-container": "#a70138",
+                        "tertiary-fixed": "#3adffa",
+                        "outline": "#6d758c",
+                        "inverse-primary": "#4954bc",
+                        "error-dim": "#d73357",
+                        "on-error": "#490013",
+                        "surface-container-lowest": "#000000",
+                        "on-tertiary": "#005561",
+                        "secondary": "#c180ff",
+                        "tertiary": "#7de9ff",
+                        "on-primary-fixed-variant": "#0c1889",
+                        "background": "#060e20",
+                        "on-primary-container": "#000a7b",
+                        "on-secondary-container": "#e9cdff",
+                        "on-secondary-fixed-variant": "#7511c3",
+                        "on-primary": "#101b8b",
+                        "tertiary-dim": "#1ad0eb",
+                        "tertiary-container": "#3adffa",
+                        "outline-variant": "#40485d",
+                        "error": "#ff6e84"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #060e20;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            backdrop-filter: blur(20px);
+            background: rgba(25, 37, 64, 0.4);
+        }
+        .ambient-glow {
+            box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(159, 167, 255, 0.05);
+        }
+        .gradient-bg {
+            background: radial-gradient(circle at 20% 20%, rgba(159, 167, 255, 0.15) 0%, transparent 40%),
+                        radial-gradient(circle at 80% 80%, rgba(193, 128, 255, 0.15) 0%, transparent 40%),
+                        radial-gradient(circle at 50% 50%, rgba(6, 14, 32, 1) 0%, rgba(6, 14, 32, 1) 100%);
+        }
+    </style>
+</head>
+<body class="font-body text-on-surface antialiased selection:bg-primary/30 selection:text-white">
+<!-- Suppression Logic: Navigation Shell is hidden for Transactional Login Flow -->
+<main class="min-h-screen flex items-center justify-center relative px-6 gradient-bg">
+<!-- Background Atmospheric Perspective Elements -->
+<div class="absolute inset-0 overflow-hidden pointer-events-none">
+<div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/10 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[150px]"></div>
+</div>
+<!-- Login Container -->
+<div class="w-full max-w-[480px] z-10">
+<!-- Branding Header -->
+<div class="text-center mb-10 space-y-3">
+<div class="inline-flex items-center justify-center p-3 rounded-2xl bg-surface-container mb-4 shadow-xl">
+<span class="material-symbols-outlined text-4xl text-primary" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<h1 class="font-headline text-4xl font-extrabold tracking-tighter text-on-surface">
+                    TrendPrompt <span class="bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">Engine</span>
+</h1>
+<p class="text-on-surface-variant text-sm font-medium tracking-tight">
+                    Detect what’s viral now. Generate what wins next.
+                </p>
+</div>
+<!-- Glass Card -->
+<div class="glass-panel rounded-lg p-10 ambient-glow border border-outline-variant/15 relative overflow-hidden">
+<!-- Inner Glow Detail -->
+<div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+<form class="space-y-6" onsubmit="return false;">
+<!-- Email Field -->
+<div class="space-y-2">
+<label class="text-xs font-semibold uppercase tracking-widest text-on-surface-variant ml-1" for="email">Email Address</label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors" data-icon="alternate_email">alternate_email</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-full py-3.5 pl-12 pr-4 text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300" id="email" placeholder="name@company.com" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-2">
+<div class="flex justify-between items-center ml-1">
+<label class="text-xs font-semibold uppercase tracking-widest text-on-surface-variant" for="password">Password</label>
+<a class="text-xs font-medium text-primary hover:text-secondary transition-colors" href="#">Forgot?</a>
+</div>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors" data-icon="lock">lock</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-full py-3.5 pl-12 pr-12 text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300" id="password" placeholder="••••••••" type="password"/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface" type="button">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+</button>
+</div>
+</div>
+<!-- Primary CTA -->
+<button class="w-full py-4 bg-gradient-to-br from-primary to-secondary text-on-primary-container font-bold rounded-full shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300">
+                        Sign In to Engine
+                    </button>
+<!-- Divider -->
+<div class="flex items-center gap-4 py-2">
+<div class="h-[1px] flex-1 bg-outline-variant/15"></div>
+<span class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Or continue with</span>
+<div class="h-[1px] flex-1 bg-outline-variant/15"></div>
+</div>
+<!-- Social Logins -->
+<div class="grid grid-cols-2 gap-4">
+<button class="flex items-center justify-center gap-2 py-3 bg-white/5 border border-outline-variant/10 rounded-full hover:bg-white/10 hover:border-primary/30 hover:shadow-[0_0_15px_rgba(159,167,255,0.1)] transition-all duration-300 group">
+<img alt="Google" class="w-5 h-5 opacity-80 group-hover:opacity-100 transition-opacity" data-alt="Official Google G logo in full brand colors representing authentication option" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtlpcfrFvLuN7VARZJ0A4lXakmIipBXHWyAI5M6y8ENKUQS1tut3_9cUPy3PzWR2KjgXc7pJPwuqq39JjvT5Vz06XaLcOeJNAsWQMYVTNS2uIZXageR7GDTdM0Oh_-KmVRDnPYsc2Nfbb4yaQBrge2QfWRB2aNzZG94XHHrWKApY3HusM8eKsolyzkL5SCX4KrAbb3se6QDCFmyd-Dx4owpQxc1THRHpN4WK1eOxsZ0UJ2B8lOBinVA31fKc6vi-s5SfGuLbLBwoHK"/>
+<span class="text-sm font-semibold">Google</span>
+</button>
+<button class="flex items-center justify-center gap-2 py-3 bg-white/5 border border-outline-variant/10 rounded-full hover:bg-white/10 hover:border-secondary/30 hover:shadow-[0_0_15px_rgba(193,128,255,0.1)] transition-all duration-300 group">
+<span class="material-symbols-outlined text-xl" data-icon="terminal">terminal</span>
+<span class="text-sm font-semibold">GitHub</span>
+</button>
+</div>
+</form>
+<!-- Footer Link -->
+<p class="mt-8 text-center text-sm text-on-surface-variant">
+                    Don't have an account? 
+                    <a class="text-primary font-semibold hover:underline decoration-primary/30 underline-offset-4" href="#">Get Started</a>
+</p>
+</div>
+<!-- Legal Links -->
+<div class="mt-12 flex justify-center gap-8 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant/40">
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-primary transition-colors" href="#">Contact Support</a>
+</div>
+</div>
+<!-- Decorative Illustration Element (Right Side, Subtle) -->
+<div class="hidden lg:block absolute right-12 top-1/2 -translate-y-1/2 w-72 pointer-events-none opacity-40">
+<div class="relative w-full aspect-square">
+<div class="absolute inset-0 rounded-full border border-primary/20 animate-[pulse_8s_infinite]"></div>
+<div class="absolute inset-8 rounded-full border border-secondary/20 animate-[pulse_12s_infinite]"></div>
+<div class="absolute inset-16 rounded-full border border-tertiary/20 animate-[pulse_16s_infinite]"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-6xl text-primary/30" data-icon="hub">hub</span>
+</div>
+</div>
+</div>
+</main>
+</body></html>

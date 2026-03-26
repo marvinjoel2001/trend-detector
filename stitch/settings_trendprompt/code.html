@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings | TrendPrompt Engine</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed-variant": "#005561",
+              "surface-container-high": "#141f38",
+              "on-surface-variant": "#a3aac4",
+              "on-surface": "#dee5ff",
+              "surface": "#060e20",
+              "on-tertiary-container": "#004b56",
+              "on-tertiary-fixed": "#00363e",
+              "on-secondary-fixed": "#4f0089",
+              "secondary-fixed": "#e5c6ff",
+              "surface-container": "#0f1930",
+              "on-primary-fixed": "#000000",
+              "secondary-dim": "#9c48ea",
+              "tertiary-fixed-dim": "#1ad0eb",
+              "primary-dim": "#8a95ff",
+              "primary-fixed-dim": "#7f8af6",
+              "surface-variant": "#192540",
+              "inverse-surface": "#faf8ff",
+              "primary-container": "#8d98ff",
+              "inverse-on-surface": "#4d556b",
+              "on-background": "#dee5ff",
+              "surface-container-highest": "#192540",
+              "surface-bright": "#1f2b49",
+              "secondary-container": "#6f00be",
+              "on-secondary": "#33005b",
+              "surface-dim": "#060e20",
+              "secondary-fixed-dim": "#dbb4ff",
+              "surface-container-low": "#091328",
+              "primary": "#9fa7ff",
+              "surface-tint": "#9fa7ff",
+              "on-error-container": "#ffb2b9",
+              "primary-fixed": "#8d98ff",
+              "error-container": "#a70138",
+              "tertiary-fixed": "#3adffa",
+              "outline": "#6d758c",
+              "inverse-primary": "#4954bc",
+              "error-dim": "#d73357",
+              "on-error": "#490013",
+              "surface-container-lowest": "#000000",
+              "on-tertiary": "#005561",
+              "secondary": "#c180ff",
+              "tertiary": "#7de9ff",
+              "on-primary-fixed-variant": "#0c1889",
+              "background": "#060e20",
+              "on-primary-container": "#000a7b",
+              "on-secondary-container": "#e9cdff",
+              "on-secondary-fixed-variant": "#7511c3",
+              "on-primary": "#101b8b",
+              "tertiary-dim": "#1ad0eb",
+              "tertiary-container": "#3adffa",
+              "outline-variant": "#40485d",
+              "error": "#ff6e84"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .glass-card {
+        background: rgba(25, 37, 64, 0.4);
+        backdrop-filter: blur(20px);
+      }
+      .ambient-shadow {
+        box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(159, 167, 255, 0.05);
+      }
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #40485d; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary/30">
+<!-- SideNavBar Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r border-slate-400/10 bg-slate-950/40 backdrop-blur-xl flex flex-col h-full p-6 z-50">
+<div class="mb-10 flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-400 to-purple-400"></div>
+<div>
+<h1 class="text-2xl font-black tracking-tighter bg-gradient-to-br from-indigo-400 to-purple-400 bg-clip-text text-transparent leading-none">TrendPrompt</h1>
+<p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">AI Engine</p>
+</div>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 p-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all duration-300 ease-out group" href="#">
+<span class="material-symbols-outlined transition-transform group-active:scale-90" data-icon="dashboard">dashboard</span>
+<span class="font-['Manrope'] antialiased tracking-tight text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all duration-300 ease-out group" href="#">
+<span class="material-symbols-outlined transition-transform group-active:scale-90" data-icon="trending_up">trending_up</span>
+<span class="font-['Manrope'] antialiased tracking-tight text-sm font-medium">Live Trends</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all duration-300 ease-out group" href="#">
+<span class="material-symbols-outlined transition-transform group-active:scale-90" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-['Manrope'] antialiased tracking-tight text-sm font-medium">Prompt Generator</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all duration-300 ease-out group" href="#">
+<span class="material-symbols-outlined transition-transform group-active:scale-90" data-icon="history">history</span>
+<span class="font-['Manrope'] antialiased tracking-tight text-sm font-medium">History</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all duration-300 ease-out group" href="#">
+<span class="material-symbols-outlined transition-transform group-active:scale-90" data-icon="timeline">timeline</span>
+<span class="font-['Manrope'] antialiased tracking-tight text-sm font-medium">Forecast</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-xl bg-white/10 backdrop-blur-md text-white shadow-[0_0_15px_rgba(99,102,241,0.3)] group" href="#">
+<span class="material-symbols-outlined transition-transform group-active:scale-90" data-icon="settings">settings</span>
+<span class="font-['Manrope'] antialiased tracking-tight text-sm font-medium">Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-white/5">
+<div class="flex items-center gap-3 p-2">
+<img alt="User profile avatar" class="w-10 h-10 rounded-full object-cover ring-2 ring-indigo-400/20" data-alt="Close up portrait of a young man with a stylish haircut in artistic lighting with soft shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGO8tLoYqrNuqqZdB3OwtiusvcRcEtMwnpVIp8ApWYzTdxLqM93ApEfmViSj9jb2imUeNO-FIxgToiKubX3v1GATGXGmQW7DcjBeqkhsrX69pTFW3GPeZHGocYldDj_Zi6pzn581C_EPox_TNjrfY_6pJhMNTUPfu_A-BRDqeDp1hRN-ba6AyEJhvAGeaUaybkjlPlE5zazJQ0a_uvmONxiBDIEaqi7x4tBxiNjrEHv5yPw3n82dHHbfAMsS37njdyOeIbL-BSUfIm"/>
+<div class="overflow-hidden">
+<p class="text-sm font-bold text-white truncate">Alex Thorne</p>
+<p class="text-xs text-slate-500 truncate">Pro Plan Member</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Shell -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-slate-950/20 backdrop-blur-md border-b border-white/5 flex justify-between items-center px-8 z-40">
+<div class="flex items-center gap-4 bg-surface-container-lowest/50 px-4 py-2 rounded-full border border-white/5 focus-within:ring-1 focus-within:ring-indigo-500/50 transition-all">
+<span class="material-symbols-outlined text-slate-400 text-lg" data-icon="search">search</span>
+<input class="bg-transparent border-none outline-none text-sm text-on-surface placeholder-slate-500 w-64 focus:ring-0" placeholder="Search preferences..." type="text"/>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-slate-400 hover:text-white transition-colors relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-secondary rounded-full border-2 border-surface"></span>
+</button>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<div class="h-8 w-[1px] bg-white/10 mx-2"></div>
+<button class="bg-gradient-to-br from-primary to-secondary text-on-primary px-4 py-1.5 rounded-full text-xs font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+                Save Changes
+            </button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-24 pb-12 px-12 min-h-screen">
+<div class="max-w-4xl mx-auto">
+<header class="mb-12">
+<h2 class="text-5xl font-headline font-extrabold tracking-tighter text-on-surface mb-2">Engine Settings</h2>
+<p class="text-on-surface-variant font-body text-lg">Fine-tune your AI generation parameters and external data feeds.</p>
+</header>
+<div class="space-y-12">
+<!-- Section: User Niche Preferences -->
+<section class="glass-card ambient-shadow rounded-lg p-8">
+<div class="flex items-start justify-between mb-8">
+<div>
+<h3 class="text-xl font-headline font-bold text-white mb-1">User Niche Preferences</h3>
+<p class="text-sm text-on-surface-variant">Select the content ecosystems you want the engine to prioritize.</p>
+</div>
+<span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg" data-icon="interests">interests</span>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+<!-- Multi-select chips -->
+<label class="group cursor-pointer">
+<input checked="" class="hidden peer" type="checkbox"/>
+<div class="flex items-center justify-between p-4 rounded-xl border border-outline-variant/15 bg-surface-container-low peer-checked:bg-primary/20 peer-checked:border-primary/50 transition-all hover:bg-surface-bright">
+<span class="text-sm font-medium">Gaming</span>
+<span class="material-symbols-outlined text-primary opacity-0 peer-checked:opacity-100 transition-opacity" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</label>
+<label class="group cursor-pointer">
+<input checked="" class="hidden peer" type="checkbox"/>
+<div class="flex items-center justify-between p-4 rounded-xl border border-outline-variant/15 bg-surface-container-low peer-checked:bg-primary/20 peer-checked:border-primary/50 transition-all hover:bg-surface-bright">
+<span class="text-sm font-medium">Finance</span>
+<span class="material-symbols-outlined text-primary opacity-0 peer-checked:opacity-100 transition-opacity" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</label>
+<label class="group cursor-pointer">
+<input class="hidden peer" type="checkbox"/>
+<div class="flex items-center justify-between p-4 rounded-xl border border-outline-variant/15 bg-surface-container-low peer-checked:bg-primary/20 peer-checked:border-primary/50 transition-all hover:bg-surface-bright">
+<span class="text-sm font-medium">Lifestyle</span>
+<span class="material-symbols-outlined text-primary opacity-0 peer-checked:opacity-100 transition-opacity" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</label>
+<label class="group cursor-pointer">
+<input class="hidden peer" type="checkbox"/>
+<div class="flex items-center justify-between p-4 rounded-xl border border-outline-variant/15 bg-surface-container-low peer-checked:bg-primary/20 peer-checked:border-primary/50 transition-all hover:bg-surface-bright">
+<span class="text-sm font-medium">Technology</span>
+<span class="material-symbols-outlined text-primary opacity-0 peer-checked:opacity-100 transition-opacity" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</label>
+<label class="group cursor-pointer">
+<input checked="" class="hidden peer" type="checkbox"/>
+<div class="flex items-center justify-between p-4 rounded-xl border border-outline-variant/15 bg-surface-container-low peer-checked:bg-primary/20 peer-checked:border-primary/50 transition-all hover:bg-surface-bright">
+<span class="text-sm font-medium">Education</span>
+<span class="material-symbols-outlined text-primary opacity-0 peer-checked:opacity-100 transition-opacity" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</label>
+<label class="group cursor-pointer">
+<input class="hidden peer" type="checkbox"/>
+<div class="flex items-center justify-between p-4 rounded-xl border border-outline-variant/15 bg-surface-container-low peer-checked:bg-primary/20 peer-checked:border-primary/50 transition-all hover:bg-surface-bright">
+<span class="text-sm font-medium">Health &amp; Fitness</span>
+<span class="material-symbols-outlined text-primary opacity-0 peer-checked:opacity-100 transition-opacity" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</label>
+</div>
+</section>
+<!-- Section: Platform Selection -->
+<section class="glass-card ambient-shadow rounded-lg p-8">
+<div class="flex items-start justify-between mb-8">
+<div>
+<h3 class="text-xl font-headline font-bold text-white mb-1">Platform Selection</h3>
+<p class="text-sm text-on-surface-variant">Enable active tracking for these social media ecosystems.</p>
+</div>
+<span class="material-symbols-outlined text-secondary bg-secondary/10 p-2 rounded-lg" data-icon="rocket_launch">rocket_launch</span>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between p-5 bg-surface-container-lowest/40 rounded-xl hover:bg-surface-container-highest transition-all group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-[#ff0050]/20 flex items-center justify-center text-[#ff0050]">
+<span class="material-symbols-outlined" data-icon="music_video">music_video</span>
+</div>
+<div>
+<p class="font-bold text-white">TikTok</p>
+<p class="text-xs text-on-surface-variant">Short-form viral trend tracking</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-outline-variant/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-5 bg-surface-container-lowest/40 rounded-xl hover:bg-surface-container-highest transition-all group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-[#ff0000]/20 flex items-center justify-center text-[#ff0000]">
+<span class="material-symbols-outlined" data-icon="smart_display">smart_display</span>
+</div>
+<div>
+<p class="font-bold text-white">YouTube Shorts</p>
+<p class="text-xs text-on-surface-variant">High-retention video metrics</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-outline-variant/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-5 bg-surface-container-lowest/40 rounded-xl hover:bg-surface-container-highest transition-all group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-[#c13584]/20 flex items-center justify-center text-[#c13584]">
+<span class="material-symbols-outlined" data-icon="camera">camera</span>
+</div>
+<div>
+<p class="font-bold text-white">Instagram Reels</p>
+<p class="text-xs text-on-surface-variant">Visual aesthetic trend analysis</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-outline-variant/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</section>
+<!-- Section: API Integration -->
+<section class="glass-card ambient-shadow rounded-lg p-8">
+<div class="flex items-start justify-between mb-8">
+<div>
+<h3 class="text-xl font-headline font-bold text-white mb-1">API Integration</h3>
+<p class="text-sm text-on-surface-variant">Connect your custom AI models for proprietary prompt generation.</p>
+</div>
+<span class="material-symbols-outlined text-tertiary bg-tertiary/10 p-2 rounded-lg" data-icon="terminal">terminal</span>
+</div>
+<div class="grid grid-cols-1 gap-8">
+<div class="space-y-4">
+<label class="block">
+<span class="text-sm font-semibold text-on-surface ml-1 block mb-2">OpenAI Endpoint Key</span>
+<div class="relative group">
+<input class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl px-4 py-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all font-mono text-sm" placeholder="Paste your API key here..." type="password" value="sk-••••••••••••••••••••••••••••••"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-white">
+<span class="material-symbols-outlined text-lg" data-icon="visibility">visibility</span>
+</button>
+</div>
+<p class="mt-2 text-[11px] text-on-surface-variant/70 italic px-1">Used for high-frequency linguistic pattern analysis.</p>
+</label>
+<label class="block">
+<span class="text-sm font-semibold text-on-surface ml-1 block mb-2">Anthropic API Key</span>
+<div class="relative group">
+<input class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl px-4 py-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all font-mono text-sm" placeholder="Paste your API key here..." type="password" value="ant-••••••••••••••••••••••••••••••"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-white">
+<span class="material-symbols-outlined text-lg" data-icon="visibility">visibility</span>
+</button>
+</div>
+<p class="mt-2 text-[11px] text-on-surface-variant/70 italic px-1">Used for deep-context logic and research synthesis.</p>
+</label>
+<div class="pt-4 flex items-center gap-4">
+<button class="flex items-center gap-2 text-primary font-bold text-sm bg-primary/10 px-4 py-2 rounded-lg hover:bg-primary/20 transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="sync">sync</span>
+                                    Test Endpoints
+                                </button>
+<span class="text-xs text-green-400 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                                    OpenAI Status: Connected
+                                </span>
+</div>
+</div>
+</div>
+</section>
+<!-- Save/Cancel Floating Footer Logic -->
+<div class="flex items-center justify-end gap-6 pt-6 border-t border-white/5">
+<button class="text-on-surface-variant font-bold text-sm hover:text-white transition-colors">Discard changes</button>
+<button class="px-8 py-3 bg-gradient-to-br from-primary to-secondary text-on-primary font-extrabold rounded-full shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                        Synchronize Engine Settings
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<!-- Background Atmospheric Elements -->
+<div class="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none opacity-40">
+<div class="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-primary/20 blur-[120px]"></div>
+<div class="absolute bottom-[-10%] left-[-5%] w-[40%] h-[40%] rounded-full bg-secondary/10 blur-[100px]"></div>
+<div class="absolute top-[30%] left-[20%] w-[30%] h-[30%] rounded-full bg-tertiary/5 blur-[80px]"></div>
+</div>
+</body></html>
