@@ -9,7 +9,17 @@ import {
   TrendsWithStatusResponse,
 } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+function sanitizeEnvUrl(value: string | undefined, protocol: "http" | "ws"): string | null {
+  if (!value) return null;
+  const trimmed = value.trim().replace(/^['\"]|['\"]$/g, "");
+  if (!trimmed) return null;
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("ws://") || trimmed.startsWith("wss://")) {
+    return trimmed;
+  }
+  return `${protocol}s://${trimmed}`;
+}
+
+const API_BASE = sanitizeEnvUrl(process.env.NEXT_PUBLIC_API_URL, "http") || "http://localhost:8000/api";
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -57,6 +67,6 @@ export const api = {
 };
 
 export const wsLiveTrendsUrl = (
-  process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000/ws/live-trends"
+  sanitizeEnvUrl(process.env.NEXT_PUBLIC_WS_URL, "ws") || "ws://localhost:8000/ws/live-trends"
 );
 
