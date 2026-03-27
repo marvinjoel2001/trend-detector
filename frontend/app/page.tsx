@@ -31,12 +31,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     api
-      .getTrendsWithStatus("?limit=12")
+      .getTrendsWithStatus("?limit=50")
       .then((data) => {
         const sortedItems = [...data.items].sort((a, b) => {
-          const scoreDiff = previewScore(b) - previewScore(a);
-          if (scoreDiff !== 0) return scoreDiff;
-          return b.rank_score - a.rank_score;
+          const rankDiff = b.rank_score - a.rank_score;
+          if (rankDiff !== 0) return rankDiff;
+          return previewScore(b) - previewScore(a);
         });
         setTrends(sortedItems);
         setSourceStatus(data.source_status || {});
@@ -127,17 +127,17 @@ export default function DashboardPage() {
       {!loading && !trends.length ? <div className="text-sm text-slate-400">{t("noTrends")}</div> : null}
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <div className="grid grid-cols-1 gap-6 xl:col-span-2 xl:grid-cols-2">
+        <div className="columns-1 gap-5 sm:columns-2 xl:col-span-2 xl:columns-3">
           {trends.map((trend) => (
             <TrendCard key={trend.id} trend={trend} />
           ))}
         </div>
-        <aside className="glass-panel rounded-2xl border border-white/10 p-6">
+        <aside className="glass-panel rounded-2xl border border-white/5 p-6">
           <h3 className="font-headline text-xl font-bold">{t("quickPromptGenerator")}</h3>
           <p className="mt-1 text-xs text-slate-400">{t("quickPromptSub")}</p>
           <label className="mt-4 block text-xs uppercase tracking-widest text-slate-400">{t("trend")}</label>
           <select
-            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950/40 p-2 text-sm"
+            className="mt-2 w-full rounded-xl border border-white/15 bg-black/40 p-2 text-sm"
             value={selectedTrendId}
             onChange={(e) => setSelectedTrendId(e.target.value)}
           >
@@ -148,15 +148,15 @@ export default function DashboardPage() {
             ))}
           </select>
           <button
-            className="btn-gradient mt-4 w-full rounded-full px-4 py-2 text-sm font-bold text-slate-900"
+            className="btn-gradient mt-4 w-full rounded-full px-4 py-2 text-sm font-bold text-white"
             onClick={handleGenerate}
             disabled={generating || !selectedTrendId}
           >
             {generating ? t("generating") : t("generatePrompt")}
           </button>
           {prompt ? (
-            <div className="mt-4 rounded-xl border border-white/10 bg-slate-950/40 p-3 text-xs text-slate-200">
-              <p className="font-semibold text-indigo-300">{prompt.payload.visual_style}</p>
+            <div className="mt-4 rounded-xl border border-white/10 bg-black/35 p-3 text-xs text-slate-200">
+              <p className="font-semibold text-slate-200">{prompt.payload.visual_style}</p>
               <p className="mt-2 whitespace-pre-wrap">{prompt.prompt_text}</p>
             </div>
           ) : null}

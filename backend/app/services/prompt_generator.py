@@ -1,6 +1,7 @@
 import json
 import logging
 from dataclasses import dataclass
+from typing import Any
 
 import requests
 
@@ -33,6 +34,76 @@ STYLE_BY_CATEGORY = {
     "finance": ("minimal financial dashboard visuals", "confident and practical"),
     "education": ("clear explainer storyboard", "helpful and authoritative"),
 }
+
+
+def _read_metadata(trend: Trend) -> dict[str, Any]:
+    raw = getattr(trend, "metadata_json", None)
+    if isinstance(raw, dict):
+        return raw
+    return {}
+
+
+def _to_int(value: Any) -> int:
+    if isinstance(value, (int, float)):
+        return int(value)
+    if isinstance(value, str):
+        parsed = value.replace(",", "").strip()
+        if parsed.isdigit():
+            return int(parsed)
+    return 0
+
+
+def _build_viral_context(trend: Trend, output_type: str, user_niche: str | None = None) -> dict[str, str]:
+    metadata = _read_metadata(trend)
+    title = str(getattr(trend, "title", "") or "").strip()
+    hashtag = str(metadata.get("hashtag") or "").strip()
+    source_url = str(metadata.get("source_url") or "").strip()
+    views = _to_int(metadata.get("views"))
+    likes = _to_int(metadata.get("likes"))
+    engagement = round((likes / views) * 100, 2) if views > 0 else 0.0
+
+    signal_text = f"{title} {hashtag}".lower()
+    is_music_signal = trend.category == "music" or any(
+        token in signal_text
+        for token in ["music", "musica", "song", "dance", "baile", "funk", "samba", "forro", "sertanejo", "pagode"]
+    )
+
+    if is_music_signal:
+        replication_pattern = (
+            "person-led performance format: open with the strongest song hook, show a human dancing or acting on-beat, "
+            "use 3-5 beat-synced cuts, and close with a repeatable move CTA"
+        )
+        scene_notes = (
+            "Use visible body movement, clear rhythm cues, and captions that instruct viewers to recreate the move in their own style"
+        )
+    elif trend.category == "gaming":
+        replication_pattern = (
+            "challenge or clutch format: hook with the key moment, then fast progression of 2-4 highlights, ending with replayable challenge prompt"
+        )
+        scene_notes = "Keep overlays short, focus on reaction + payoff, and end with a clear skill/challenge CTA"
+    elif trend.category in {"news", "technology", "finance", "education"}:
+        replication_pattern = (
+            "hook + explanation format: 2-second shocking claim, 3 concise evidence beats, and CTA inviting comments/opinions"
+        )
+        scene_notes = "Use text overlays for proof points and keep each beat under 4 seconds"
+    else:
+        replication_pattern = (
+            "relatable lifestyle short: start with problem/pain hook, show transformation in 3 visual beats, end with direct next-step CTA"
+        )
+        scene_notes = "Feature a real person on camera, concrete before/after moments, and caption-first storytelling"
+
+    topic_seed = hashtag or title or "viral trend"
+    return {
+        "topic_seed": topic_seed,
+        "source_url": source_url,
+        "views": str(views),
+        "likes": str(likes),
+        "engagement_rate": f"{engagement}%",
+        "output_type": output_type.lower(),
+        "user_niche": user_niche or "creator",
+        "replication_pattern": replication_pattern,
+        "scene_notes": scene_notes,
+    }
 
 OUTPUT_TYPE_RULES = {
     "video": {
@@ -74,16 +145,22 @@ def _build_local_prompt_payload(
 ) -> PromptPayload:
     style, tone = STYLE_BY_CATEGORY.get(trend.category, STYLE_BY_CATEGORY["lifestyle"])
     fmt, duration = FORMAT_BY_OUTPUT.get(output_type.lower(), FORMAT_BY_OUTPUT["video"])
+    viral_context = _build_viral_context(trend, output_type=output_type, user_niche=user_niche)
     hashtags = [
         f"#{trend.category}",
         f"#{trend.platform}",
         "#trendprompt",
         f"#{(user_niche or 'creator').replace(' ', '').lower()}",
     ]
+    if viral_context["topic_seed"].startswith("#"):
+        hashtags.insert(0, viral_context["topic_seed"])
 
     description = (
-        f"{trend.title}. Create {output_type.lower()} content optimized for {platform_target} "
-        f"with a {style}. Include clear viral hook in first 2 seconds and CTA at the end."
+        f"{trend.title}. Create {output_type.lower()} content optimized for {platform_target} with a {style}. "
+        f"Base concept on viral seed {viral_context['topic_seed']} and replicate the pattern: {viral_context['replication_pattern']}. "
+        f"Scene notes: {viral_context['scene_notes']}. "
+        f"Trend signal context: views={viral_context['views']}, likes={viral_context['likes']}, engagement={viral_context['engagement_rate']}. "
+        "Include clear viral hook in first 2 seconds and CTA at the end."
     )
     return PromptPayload(
         description=description,
@@ -149,6 +226,11 @@ def _build_with_gemini(
     endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
     output_key = output_type.lower()
     rules = OUTPUT_TYPE_RULES.get(output_key, OUTPUT_TYPE_RULES["video"])
+    viral_context = _build_viral_context(trend, output_type=output_type, user_niche=user_niche)
+    source_hint = viral_context["source_url"] or "N/A"
+    music_replication_hint = (
+        "If the trend is music/dance oriented, the concept MUST include a person dancing or performing to the musical hook."
+    )
 
     instruction = (
         "Return ONLY one valid JSON object with keys: "
@@ -159,12 +241,21 @@ def _build_with_gemini(
         f"Trend title: {trend.title}\n"
         f"Trend category: {trend.category}\n"
         f"Trend platform: {trend.platform}\n"
+        f"Trend hashtag/topic seed: {viral_context['topic_seed']}\n"
+        f"Trend views: {viral_context['views']}\n"
+        f"Trend likes: {viral_context['likes']}\n"
+        f"Trend engagement rate: {viral_context['engagement_rate']}\n"
+        f"Trend source URL (if available): {source_hint}\n"
         f"Target platform: {platform_target}\n"
         f"Output type: {output_key}\n"
-        f"User niche: {user_niche or 'creator'}\n"
+        f"User niche: {viral_context['user_niche']}\n"
         f"Output-specific format guidance: {rules['format_hint']}\n"
         f"Output-specific duration guidance: {rules['duration_hint']}\n"
         f"Output-specific content guidance: {rules['description_hint']}\n"
+        f"Viral replication pattern to follow: {viral_context['replication_pattern']}\n"
+        f"Scene execution notes: {viral_context['scene_notes']}\n"
+        "Describe actionable on-camera direction: who appears, what they do each beat, camera movement, text overlays, and CTA.\n"
+        f"{music_replication_hint}\n"
         "The response must be creator-ready and practical for immediate production.\n"
         f"{instruction}"
     )

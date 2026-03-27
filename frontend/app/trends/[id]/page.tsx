@@ -99,6 +99,8 @@ export default function TrendDetailPage() {
         <div className="space-y-6">
           {(() => {
             const media = getTrendMedia(detail.trend);
+            const isTikTok = detail.trend.platform.toLowerCase() === "tiktok";
+            const iframeRatio = isTikTok ? "9 / 16" : "16 / 9";
             return (
               <section className="glass-panel overflow-hidden rounded-2xl border border-white/10">
                 <div className="border-b border-white/10 px-6 py-4">
@@ -106,26 +108,28 @@ export default function TrendDetailPage() {
                 </div>
                 <div className="p-6">
                   {media.embedUrl ? (
-                    <iframe
-                      className="h-72 w-full rounded-xl border border-white/10 bg-slate-950/40"
-                      src={media.embedUrl}
-                      title={`${detail.trend.title} preview`}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
+                    <div className="w-full overflow-hidden rounded-xl border border-white/10" style={{ aspectRatio: iframeRatio }}>
+                      <iframe
+                        className="h-full w-full bg-slate-950/40"
+                        src={media.embedUrl}
+                        title={`${detail.trend.title} preview`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
                   ) : media.videoUrl ? (
                     <video
-                      className="h-72 w-full rounded-xl border border-white/10 bg-slate-950/40 object-cover"
+                      className="w-full max-h-[38rem] rounded-xl border border-white/10 bg-slate-950/40 object-contain"
                       src={media.videoUrl}
                       controls
                       playsInline
                     />
                   ) : media.imageUrl ? (
-                    <div
-                      className="h-72 w-full rounded-xl border border-white/10 bg-cover bg-center"
-                      style={{ backgroundImage: `url('${media.imageUrl}')` }}
+                    <img
+                      className="w-full max-h-[38rem] rounded-xl border border-white/10 bg-slate-950/40 object-contain"
+                      src={media.imageUrl}
                       aria-label={t("preview")}
-                      role="img"
+                      alt={detail.trend.title}
                     />
                   ) : (
                     <div className="rounded-xl border border-white/10 p-5 text-sm text-slate-300">{t("noPreviewAvailable")}</div>
@@ -159,20 +163,25 @@ export default function TrendDetailPage() {
             ) : null}
 
             {previewGallery.length ? (
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-4 columns-1 gap-4 sm:columns-2 lg:columns-3">
                 {previewGallery.map((item) => (
-                  <article key={item.id} className="overflow-hidden rounded-xl border border-white/10 bg-slate-900/30">
+                  <article key={item.id} className="mb-4 break-inside-avoid overflow-hidden rounded-xl border border-white/10 bg-slate-900/30">
                     {item.videoUrl ? (
-                      <video className="h-40 w-full bg-slate-950/50 object-cover" src={item.videoUrl} controls playsInline />
+                      <video className="w-full max-h-[28rem] bg-slate-950/50 object-contain" src={item.videoUrl} controls playsInline />
+                    ) : item.embedUrl ? (
+                      <div className="w-full" style={{ aspectRatio: item.platform.toLowerCase() === "tiktok" ? "9 / 16" : "16 / 9" }}>
+                        <iframe
+                          className="h-full w-full bg-slate-950/40"
+                          src={item.embedUrl}
+                          title={`${item.title} preview`}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
                     ) : item.imageUrl ? (
-                      <div
-                        className="h-40 w-full bg-cover bg-center"
-                        style={{ backgroundImage: `url('${item.imageUrl}')` }}
-                        aria-label={item.title}
-                        role="img"
-                      />
+                      <img className="w-full max-h-[28rem] bg-slate-950/40 object-contain" src={item.imageUrl} aria-label={item.title} alt={item.title} />
                     ) : (
-                      <div className="flex h-40 items-center justify-center text-xs text-slate-300">{t("noPreviewAvailable")}</div>
+                      <div className="flex min-h-32 items-center justify-center p-4 text-xs text-slate-300">{t("noPreviewAvailable")}</div>
                     )}
                     <div className="space-y-2 p-3">
                       <p className="line-clamp-2 text-sm font-semibold text-slate-100">{item.title}</p>
