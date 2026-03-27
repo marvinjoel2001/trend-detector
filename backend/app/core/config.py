@@ -3,6 +3,7 @@ from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import URL, make_url
 
 
 class Settings(BaseSettings):
@@ -61,16 +62,28 @@ class Settings(BaseSettings):
     @property
     def sql_url(self) -> str:
         if self.database_url:
-            url = self.database_url.strip()
-            if url.startswith("postgres://"):
-                return "postgresql+asyncpg://" + url[len("postgres://") :]
-            if url.startswith("postgresql://") and "+asyncpg" not in url:
-                return "postgresql+asyncpg://" + url[len("postgresql://") :]
-            return url
-        return (
-            f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"
-            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
-        )
+            return self._normalize_database_url(self.database_url)
+
+        return URL.create(
+            drivername="postgresql+asyncpg",
+            username=self.postgres_user,
+            password=self.postgres_password,
+            host=self.postgres_host,
+            port=self.postgres_port,
+            database=self.postgres_db,
+        ).render_as_string(hide_password=False)
+
+    def _normalize_database_url(self, raw_url: str) -> str:
+        url = raw_url.strip().strip('"').strip("'")
+        if url.startswith("postgres://"):
+            url = "postgresql+asyncpg://" + url[len("postgres://") :]
+        elif url.startswith("postgresql://") and "+asyncpg" not in url:
+            url = "postgresql+asyncpg://" + url[len("postgresql://") :]
+
+        parsed = make_url(url)
+        if parsed.drivername.startswith("postgresql") and "+asyncpg" not in parsed.drivername:
+            parsed = parsed.set(drivername="postgresql+asyncpg")
+        return parsed.render_as_string(hide_password=False)
 
     @property
     def celery_broker_url(self) -> str:
