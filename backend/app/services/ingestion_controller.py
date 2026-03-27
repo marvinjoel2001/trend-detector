@@ -135,30 +135,31 @@ class IngestionController:
                 source=spec.name,
             )
             used_fallback = any(item.get("metadata", {}).get("fallback") for item in items)
-            if used_fallback:
-                raise RuntimeError(f"{spec.name}_source_returned_fallback_payload")
             ttl = max(settings.source_cache_ttl_seconds, 1800)
             await cache_set_json(spec.cache_key, items, ttl=ttl)
             await self._mark_run(spec)
+            status = "fallback" if used_fallback else "real"
+            message = "fallback_data_ok" if used_fallback else "real_data_ok"
+            response_status = "ok_fallback" if used_fallback else "ok"
             logger.info(
                 "source_fetch_success",
                 extra={
                     "source": spec.name,
                     "request_ts": request_ts,
-                    "response_status": "ok",
+                    "response_status": response_status,
                     "items_count": len(items),
                     "duration_ms": int((time.perf_counter() - started) * 1000),
                     "cache_hit": False,
-                    "fallback": False,
+                    "fallback": used_fallback,
                 },
             )
             await self._set_source_status(
                 source=spec.name,
-                status="real",
-                message="real_data_ok",
+                status=status,
+                message=message,
                 items_count=len(items),
                 used_cache=False,
-                used_fallback=False,
+                used_fallback=used_fallback,
             )
             return items
         except Exception as exc:  # noqa: BLE001

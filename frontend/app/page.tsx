@@ -6,7 +6,17 @@ import { AppShell } from "../components/app-shell";
 import { TrendCard } from "../components/trend-card";
 import { api } from "../lib/api";
 import { useI18n } from "../lib/i18n";
+import { getTrendMedia } from "../lib/trend-media";
 import { PromptResult, SourceStatusResponse, Trend } from "../lib/types";
+
+function previewScore(trend: Trend): number {
+  const media = getTrendMedia(trend);
+  if (media.videoUrl) return 4;
+  if (media.embedUrl) return 3;
+  if (media.imageUrl) return 2;
+  if (media.sourceUrl) return 1;
+  return 0;
+}
 
 export default function DashboardPage() {
   const { t } = useI18n();
@@ -23,9 +33,14 @@ export default function DashboardPage() {
     api
       .getTrendsWithStatus("?limit=12")
       .then((data) => {
-        setTrends(data.items);
+        const sortedItems = [...data.items].sort((a, b) => {
+          const scoreDiff = previewScore(b) - previewScore(a);
+          if (scoreDiff !== 0) return scoreDiff;
+          return b.rank_score - a.rank_score;
+        });
+        setTrends(sortedItems);
         setSourceStatus(data.source_status || {});
-        if (data.items[0]) setSelectedTrendId(data.items[0].id);
+        if (sortedItems[0]) setSelectedTrendId(sortedItems[0].id);
 
         const alerts = Object.values(data.source_status || {})
           .filter((s) => ["unavailable", "fallback", "cached", "locked", "locked_cached"].includes(s.status))

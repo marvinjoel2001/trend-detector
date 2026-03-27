@@ -15,9 +15,9 @@ celery_app = Celery(
 )
 celery_app.conf.timezone = "UTC"
 celery_app.conf.beat_schedule = {
-    "run-ingestion-controller-every-5-min": {
+    "run-ingestion-controller": {
         "task": "tasks.run_ingestion",
-        "schedule": 5 * 60,
+        "schedule": max(settings.scheduler_interval_minutes, 1) * 60,
     },
 }
 

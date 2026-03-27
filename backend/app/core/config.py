@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     source_interval_tiktok_minutes: int = 60
 
     youtube_api_key: str | None = None
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-1.5-flash"
     reddit_client_id: str | None = None
     reddit_client_secret: str | None = None
     reddit_user_agent: str = "trendprompt-engine/1.0"
@@ -59,7 +61,12 @@ class Settings(BaseSettings):
     @property
     def sql_url(self) -> str:
         if self.database_url:
-            return self.database_url
+            url = self.database_url.strip()
+            if url.startswith("postgres://"):
+                return "postgresql+asyncpg://" + url[len("postgres://") :]
+            if url.startswith("postgresql://") and "+asyncpg" not in url:
+                return "postgresql+asyncpg://" + url[len("postgresql://") :]
+            return url
         return (
             f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
@@ -77,4 +84,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

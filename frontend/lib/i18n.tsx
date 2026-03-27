@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, ReactNode, useContext, useMemo, useState } from "react";
 
 type Language = "en" | "es";
 
@@ -51,6 +51,12 @@ const translations = {
     format: "Format",
     publish: "Publish",
     language: "Language",
+    preview: "Preview",
+    openSource: "Open Source",
+    noPreviewAvailable: "No preview available yet.",
+    previewGallery: "Related Preview Gallery",
+    loadingPreviewGallery: "Loading related previews...",
+    noPreviewGalleryItems: "No related media found for this trend yet.",
   },
   es: {
     navDashboard: "Panel",
@@ -98,6 +104,12 @@ const translations = {
     format: "Formato",
     publish: "Publicación",
     language: "Idioma",
+    preview: "Previsualización",
+    openSource: "Abrir Fuente",
+    noPreviewAvailable: "Aún no hay previsualización disponible.",
+    previewGallery: "Galería de Previews Relacionados",
+    loadingPreviewGallery: "Cargando previews relacionados...",
+    noPreviewGalleryItems: "Aún no se encontró media relacionada para esta tendencia.",
   },
 } as const;
 
@@ -109,18 +121,16 @@ type I18nContextType = {
 
 const I18nContext = createContext<I18nContextType | null>(null);
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("en");
+function resolveInitialLanguage(): Language {
+  if (typeof window === "undefined") return "en";
+  const stored = window.localStorage.getItem("trendprompt_language");
+  if (stored === "en" || stored === "es") return stored;
+  const browser = navigator.language.toLowerCase();
+  return browser.startsWith("es") ? "es" : "en";
+}
 
-  useEffect(() => {
-    const stored = window.localStorage.getItem("trendprompt_language");
-    if (stored === "en" || stored === "es") {
-      setLanguage(stored);
-      return;
-    }
-    const browser = navigator.language.toLowerCase();
-    if (browser.startsWith("es")) setLanguage("es");
-  }, []);
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const [language, setLanguage] = useState<Language>(resolveInitialLanguage);
 
   const value = useMemo<I18nContextType>(
     () => ({
@@ -142,4 +152,3 @@ export function useI18n() {
   if (!ctx) throw new Error("useI18n must be used within I18nProvider");
   return ctx;
 }
-

@@ -27,17 +27,30 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     redis_listener_task = None
+    startup_ingestion_task = None
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     async with SessionLocal() as db:
         await db.execute(text("SELECT 1"))
-        await run_ingestion_cycle(db, broadcaster=ws_manager.broadcast)
+
+    async def _run_startup_ingestion() -> None:
+        try:
+            async with SessionLocal() as db:
+                await run_ingestion_cycle(db, broadcaster=ws_manager.broadcast)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("startup_ingestion_failed error=%s", exc)
+
+    startup_ingestion_task = asyncio.create_task(_run_startup_ingestion())
 
     if settings.use_celery:
         redis_listener_task = asyncio.create_task(listen_live_events(ws_manager.broadcast))
         logger.info("Celery mode enabled; trigger async ingestion seed task")
-        run_ingestion_task.delay()
+        try:
+            run_ingestion_task.delay()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("celery_startup_dispatch_failed error=%s", exc)
     else:
         logger.info("APScheduler fallback mode enabled")
         start_scheduler()
@@ -50,6 +63,10 @@ async def lifespan(_: FastAPI):
         redis_listener_task.cancel()
         with suppress(asyncio.CancelledError):
             await redis_listener_task
+    if startup_ingestion_task:
+        startup_ingestion_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await startup_ingestion_task
     await engine.dispose()
 
 

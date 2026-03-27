@@ -15,6 +15,25 @@ _pytrends_client: Any | None = None
 _cooldown_until_ts = 0.0
 
 
+def _fallback_google_trends(now_iso: str) -> list[dict[str, Any]]:
+    fallback_queries = ["AI tools", "Crypto market", "Tech layoffs", "Gaming news", "Study hacks"]
+    return [
+        {
+            "id": f"gtr-fallback-{idx}-{query.lower().replace(' ', '-')}",
+            "title": query,
+            "platform": "google",
+            "timestamp": now_iso,
+            "metadata": {
+                "views": max(12000 - idx * 800, 3000),
+                "likes": max(700 - idx * 35, 80),
+                "fallback": True,
+                "source_url": f"https://trends.google.com/trends/explore?q={query.replace(' ', '%20')}",
+            },
+        }
+        for idx, query in enumerate(fallback_queries, 1)
+    ]
+
+
 def _get_pytrends_client() -> Any:
     global _pytrends_client  # noqa: PLW0603
     if _pytrends_client is not None:
@@ -67,6 +86,9 @@ async def fetch_google_trends() -> list[dict[str, Any]]:
                     "metadata": {"views": max(10000 - i * 250, 1000), "likes": max(500 - i * 10, 10)},
                 }
             )
+            items[-1]["metadata"]["source_url"] = (
+                f"https://trends.google.com/trends/explore?q={query.replace(' ', '%20')}"
+            )
 
         logger.info(
             "source_provider_response",
@@ -103,6 +125,9 @@ async def fetch_google_trends() -> list[dict[str, Any]]:
                     "metadata": {"views": max(10000 - idx * 250, 1000), "likes": max(500 - idx * 10, 10)},
                 }
             )
+            items[-1]["metadata"]["source_url"] = (
+                f"https://trends.google.com/trends/explore?q={title.replace(' ', '%20')}"
+            )
 
         if not items:
             raise RuntimeError("google_trends_rss_empty")
@@ -125,4 +150,11 @@ async def fetch_google_trends() -> list[dict[str, Any]]:
             "source_provider_primary_failed_trying_backup",
             extra={"source": "google", "response_status": "primary_failed", "error": str(exc)},
         )
-        return await asyncio.to_thread(_call_rss_backup)
+        try:
+            return await asyncio.to_thread(_call_rss_backup)
+        except Exception as backup_exc:  # noqa: BLE001
+            logger.warning(
+                "source_provider_backup_failed_using_fallback",
+                extra={"source": "google", "response_status": "backup_failed", "error": str(backup_exc)},
+            )
+            return _fallback_google_trends(now.isoformat())

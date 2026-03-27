@@ -67,6 +67,65 @@ docker compose up --build
    - Frontend: `http://localhost:3000`
    - Backend docs: `http://localhost:8000/docs`
 
+## Railway Deploy Checklist
+
+Deploy as multiple Railway services (recommended):
+
+- `backend-api` (Dockerfile: `backend/Dockerfile`)
+- `backend-worker` (Dockerfile: `backend/Dockerfile`, start command override for Celery)
+- `frontend-web` (Dockerfile: `frontend/Dockerfile`)
+- Railway PostgreSQL plugin
+- Railway Redis plugin
+
+### 1) Backend API service
+
+- Root directory: `backend`
+- Dockerfile: `Dockerfile`
+- Healthcheck path: `/health`
+- Required environment variables:
+  - `APP_ENV=production`
+  - `DEBUG=false`
+  - `API_PREFIX=/api`
+  - `DATABASE_URL=${{Postgres.DATABASE_URL}}`
+  - `REDIS_URL=${{Redis.REDIS_URL}}`
+  - `USE_REDIS_CACHE=true`
+  - `USE_CELERY=true`
+  - `CORS_ORIGINS=https://<your-frontend-domain>`
+  - `YOUTUBE_API_KEY=<your_youtube_key>`
+  - `TIKTOK_HEADLESS=true`
+  - Optional:
+    - `REDDIT_CLIENT_ID`
+    - `REDDIT_CLIENT_SECRET`
+    - `REDDIT_USER_AGENT=trendprompt-engine/1.0`
+
+### 2) Worker service
+
+- Root directory: `backend`
+- Dockerfile: `Dockerfile`
+- Start command:
+  - `celery -A app.tasks.celery_app.celery_app worker -B -l info`
+- Environment variables: same as backend API service.
+
+### 3) Frontend service
+
+- Root directory: `frontend`
+- Dockerfile: `Dockerfile`
+- Required environment variables:
+  - `NEXT_PUBLIC_API_URL=https://<your-backend-domain>/api`
+  - `NEXT_PUBLIC_WS_URL=wss://<your-backend-domain>/ws/live-trends`
+
+### 4) Notes
+
+- The backend supports Railway Postgres URL formats (`postgres://...` and `postgresql://...`) and normalizes to `postgresql+asyncpg://...` automatically.
+- If TikTok or Google providers are blocked/rate-limited, source status is exposed at:
+  - `GET /api/sources/status`
+- For first validation after deploy, verify:
+  - `GET /health`
+  - `GET /api/trends?include_source_status=true`
+  - `GET /api/google_trends_results?refresh=true`
+  - `GET /api/youtube_results?refresh=true`
+  - `GET /api/tiktok_results?refresh=true`
+
 ## Notes
 
 - Source health is available at `GET /api/sources/status`.

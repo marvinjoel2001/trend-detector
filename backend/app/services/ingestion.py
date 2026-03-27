@@ -119,9 +119,11 @@ async def run_ingestion_cycle(
             )
             continue
         if item.get("platform") == "tiktok":
-            hashtag = str(item.get("metadata", {}).get("hashtag", "")).strip()
+            metadata = item.get("metadata", {})
+            hashtag = str(metadata.get("hashtag", "")).strip()
             title = str(item.get("title", "")).strip().lower()
-            if not hashtag or title in {"", "trend"}:
+            has_media_signal = bool(metadata.get("thumbnail_url") or metadata.get("video_url") or metadata.get("source_url"))
+            if (not hashtag and not has_media_signal) or title in {"", "trend"}:
                 logger.warning(
                     "ingestion_skipping_invalid_tiktok_item",
                     extra={"source": "tiktok", "response_status": "skipped_invalid", "items_count": 0},

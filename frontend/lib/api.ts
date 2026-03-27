@@ -2,6 +2,7 @@ import {
   ForecastResponse,
   PromptHistoryItem,
   PromptResult,
+  SourceResultsResponse,
   SourceStatusResponse,
   Trend,
   TrendDetailResponse,
@@ -33,6 +34,10 @@ export const api = {
   getSourcesStatus: () => apiFetch<SourceStatusResponse>("/sources/status"),
   getTrend: (id: string) => apiFetch<TrendDetailResponse>(`/trends/${id}`),
   getForecast: (id: string) => apiFetch<ForecastResponse>(`/trends/forecast/${id}`),
+  getYoutubeResults: () => apiFetch<SourceResultsResponse>("/youtube_results"),
+  getTiktokResults: () => apiFetch<SourceResultsResponse>("/tiktok_results"),
+  getRedditResults: () => apiFetch<SourceResultsResponse>("/reddit_results"),
+  getGoogleResults: () => apiFetch<SourceResultsResponse>("/google_trends_results"),
   generatePrompt: (payload: {
     trend_id: string;
     platform_target: string;

@@ -35,6 +35,8 @@ export type TrendDetailResponse = {
   }>;
 };
 
+export type SourceResultsResponse = Trend[];
+
 export type ForecastResponse = {
   trend_id: string;
   generated_at: string;

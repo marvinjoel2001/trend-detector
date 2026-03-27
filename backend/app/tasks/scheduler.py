@@ -20,7 +20,7 @@ def start_scheduler() -> None:
         return
     scheduler.add_job(
         run_ingestion_job,
-        IntervalTrigger(minutes=5),
+        IntervalTrigger(minutes=max(settings.scheduler_interval_minutes, 1)),
         max_instances=1,
         coalesce=True,
         id="trend-ingestion-controller",
@@ -32,4 +32,3 @@ def start_scheduler() -> None:
 def stop_scheduler() -> None:
     if scheduler.running:
         scheduler.shutdown()
-

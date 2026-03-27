@@ -17,14 +17,26 @@ def get_reddit_fallback_trends() -> list[dict[str, Any]]:
             "title": "Prompt engineering side hustle stories",
             "platform": "reddit",
             "timestamp": now,
-            "metadata": {"views": 180000, "likes": 4100, "subreddit": "entrepreneur"},
+            "metadata": {
+                "views": 180000,
+                "likes": 4100,
+                "subreddit": "entrepreneur",
+                "thumbnail_url": "https://www.redditstatic.com/new-icon.png",
+                "source_url": "https://www.reddit.com/r/entrepreneur/",
+            },
         },
         {
             "id": "rd-demo-2",
             "title": "New meme template using AI sports edits",
             "platform": "reddit",
             "timestamp": now,
-            "metadata": {"views": 220000, "likes": 6200, "subreddit": "memes"},
+            "metadata": {
+                "views": 220000,
+                "likes": 6200,
+                "subreddit": "memes",
+                "thumbnail_url": "https://www.redditstatic.com/new-icon.png",
+                "source_url": "https://www.reddit.com/r/memes/",
+            },
         },
     ]
 
@@ -50,6 +62,28 @@ async def fetch_reddit_trends() -> list[dict[str, Any]]:
             subreddit = reddit.subreddit(sub)
             for post in subreddit.hot(limit=4):
                 score = int(post.score or 0)
+                thumbnail = str(getattr(post, "thumbnail", "") or "").strip()
+                if not thumbnail.startswith("http"):
+                    thumbnail = None
+                preview_image = None
+                try:
+                    preview_images = (getattr(post, "preview", {}) or {}).get("images", [])
+                    if preview_images:
+                        preview_image = (
+                            preview_images[0]
+                            .get("source", {})
+                            .get("url", "")
+                            .replace("&amp;", "&")
+                        )
+                except Exception:  # noqa: BLE001
+                    preview_image = None
+                image_url = preview_image or thumbnail
+
+                source_url = f"https://www.reddit.com{post.permalink}"
+                video_url = None
+                if bool(getattr(post, "is_video", False)):
+                    media = getattr(post, "media", {}) or {}
+                    video_url = ((media.get("reddit_video") or {}).get("fallback_url")) or None
                 items.append(
                     {
                         "id": f"rd-{post.id}",
@@ -61,6 +95,9 @@ async def fetch_reddit_trends() -> list[dict[str, Any]]:
                             "likes": score,
                             "subreddit": sub,
                             "comments": int(post.num_comments or 0),
+                            "thumbnail_url": image_url,
+                            "source_url": source_url,
+                            "video_url": video_url,
                         },
                     }
                 )
@@ -77,4 +114,3 @@ async def fetch_reddit_trends() -> list[dict[str, Any]]:
         return items
 
     return await asyncio.to_thread(_call)
-
