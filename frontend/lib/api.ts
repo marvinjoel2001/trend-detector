@@ -11,7 +11,7 @@ import {
 
 function sanitizeEnvUrl(value: string | undefined, protocol: "http" | "ws"): string | null {
   if (!value) return null;
-  const trimmed = value.trim().replace(/^['\"]|['\"]$/g, "");
+  const trimmed = value.trim().replace(/^[`'"]+|[`'"]+$/g, "");
   if (!trimmed) return null;
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("ws://") || trimmed.startsWith("wss://")) {
     return trimmed;
@@ -19,7 +19,31 @@ function sanitizeEnvUrl(value: string | undefined, protocol: "http" | "ws"): str
   return `${protocol}s://${trimmed}`;
 }
 
-const API_BASE = sanitizeEnvUrl(process.env.NEXT_PUBLIC_API_URL, "http") || "http://localhost:8000/api";
+function resolveApiBase(): string {
+  const envApi = sanitizeEnvUrl(process.env.NEXT_PUBLIC_API_URL, "http");
+  if (envApi) return envApi;
+  if (typeof window !== "undefined") {
+    const { protocol, hostname } = window.location;
+    const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
+    if (!isLocal) {
+      return `${protocol}//${hostname}/api`;
+    }
+  }
+  return "http://localhost:8000/api";
+}
+
+function resolveWsLiveTrendsUrl(): string {
+  const envWs = sanitizeEnvUrl(process.env.NEXT_PUBLIC_WS_URL, "ws");
+  if (envWs) return envWs;
+  const apiBase = resolveApiBase();
+  const wsBase = apiBase.replace(/^http:/, "ws:").replace(/^https:/, "wss:");
+  if (wsBase.endsWith("/api")) {
+    return `${wsBase.slice(0, -4)}/ws/live-trends`;
+  }
+  return `${wsBase}/ws/live-trends`;
+}
+
+const API_BASE = resolveApiBase();
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -66,7 +90,4 @@ export const api = {
     }),
 };
 
-export const wsLiveTrendsUrl = (
-  sanitizeEnvUrl(process.env.NEXT_PUBLIC_WS_URL, "ws") || "ws://localhost:8000/ws/live-trends"
-);
-
+export const wsLiveTrendsUrl = resolveWsLiveTrendsUrl();
