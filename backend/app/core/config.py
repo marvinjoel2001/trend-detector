@@ -1,5 +1,6 @@
 from functools import lru_cache
 from typing import Literal
+from urllib.parse import quote
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -23,6 +24,11 @@ class Settings(BaseSettings):
     database_url: str | None = None
 
     redis_url: str = "redis://redis:6379/0"
+    redis_host: str | None = None
+    redis_port: int | None = None
+    redis_user: str | None = None
+    redis_password: str | None = None
+    redis_db: int = 0
     use_redis_cache: bool = True
     use_celery: bool = True
     scheduler_interval_minutes: int = 30
@@ -86,12 +92,33 @@ class Settings(BaseSettings):
         return parsed.render_as_string(hide_password=False)
 
     @property
+    def redis_connection_url(self) -> str:
+        raw = (self.redis_url or "").strip().strip('"').strip("'")
+        if raw and raw != "redis://redis:6379/0":
+            return raw
+
+        host = (self.redis_host or "").strip()
+        port = self.redis_port or 6379
+        db = self.redis_db if self.redis_db is not None else 0
+        password = self.redis_password
+        user = (self.redis_user or "").strip() or ("default" if password else "")
+
+        if host:
+            if password:
+                user_part = quote(user, safe="")
+                pass_part = quote(password, safe="")
+                return f"redis://{user_part}:{pass_part}@{host}:{port}/{db}"
+            return f"redis://{host}:{port}/{db}"
+
+        return "redis://redis:6379/0"
+
+    @property
     def celery_broker_url(self) -> str:
-        return self.redis_url
+        return self.redis_connection_url
 
     @property
     def celery_backend_url(self) -> str:
-        return self.redis_url
+        return self.redis_connection_url
 
 
 @lru_cache

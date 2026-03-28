@@ -19,7 +19,7 @@ def redis_client() -> Redis:
 
     client = _clients.get(key)
     if client is None:
-        client = Redis.from_url(settings.redis_url, decode_responses=True)
+        client = Redis.from_url(settings.redis_connection_url, decode_responses=True)
         _clients[key] = client
     return client
 
