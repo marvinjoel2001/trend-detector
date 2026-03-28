@@ -23,10 +23,9 @@ function resolveApiBase(): string {
   const envApi = sanitizeEnvUrl(process.env.NEXT_PUBLIC_API_URL, "http");
   if (envApi) return envApi;
   if (typeof window !== "undefined") {
-    const { protocol, hostname } = window.location;
-    const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
-    if (!isLocal) {
-      return `${protocol}//${hostname}/api`;
+    const hostname = window.location.hostname.toLowerCase();
+    if (hostname.endsWith(".up.railway.app")) {
+      return "https://trend-detector-backend-production.up.railway.app/api";
     }
   }
   return "http://localhost:8000/api";
