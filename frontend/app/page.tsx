@@ -25,9 +25,16 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTrendId, setSelectedTrendId] = useState<string>("");
+  const [selectedOutputType, setSelectedOutputType] = useState<
+    "video" | "image"
+  >("video");
+  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const [prompt, setPrompt] = useState<PromptResult | null>(null);
+  const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [toasts, setToasts] = useState<Array<{ id: string; type: "warn" | "error"; text: string }>>([]);
+  const [toasts, setToasts] = useState<
+    Array<{ id: string; type: "warn" | "error"; text: string }>
+  >([]);
 
   useEffect(() => {
     api
@@ -43,10 +50,21 @@ export default function DashboardPage() {
         if (sortedItems[0]) setSelectedTrendId(sortedItems[0].id);
 
         const alerts = Object.values(data.source_status || {})
-          .filter((s) => ["unavailable", "fallback", "cached", "locked", "locked_cached"].includes(s.status))
+          .filter((s) =>
+            [
+              "unavailable",
+              "fallback",
+              "cached",
+              "locked",
+              "locked_cached",
+            ].includes(s.status),
+          )
           .map((s) => ({
             id: `${s.source}-${s.updated_at || "na"}`,
-            type: s.status === "unavailable" ? "error" as const : "warn" as const,
+            type:
+              s.status === "unavailable"
+                ? ("error" as const)
+                : ("warn" as const),
             text: `${s.source.toUpperCase()}: ${s.message}`,
           }));
         if (alerts.length) {
@@ -65,6 +83,31 @@ export default function DashboardPage() {
     return () => clearTimeout(timer);
   }, [toasts]);
 
+  useEffect(() => {
+    if (!isPromptModalOpen) return;
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setIsPromptModalOpen(false);
+    }
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [isPromptModalOpen]);
+
+  function handleSelectCardForPrompt(
+    trend: Trend,
+    outputType: "video" | "image",
+  ) {
+    setSelectedTrendId(trend.id);
+    setSelectedOutputType(outputType);
+    setPrompt(null);
+    setCopied(false);
+    setIsPromptModalOpen(true);
+  }
+
+  function closePromptModal() {
+    if (generating) return;
+    setIsPromptModalOpen(false);
+  }
+
   async function handleGenerate() {
     if (!selectedTrendId) return;
     setGenerating(true);
@@ -73,7 +116,7 @@ export default function DashboardPage() {
       const result = await api.generatePrompt({
         trend_id: selectedTrendId,
         platform_target: "tiktok",
-        output_type: "video",
+        output_type: selectedOutputType,
         user_niche: "technology",
       });
       setPrompt(result);
@@ -83,6 +126,20 @@ export default function DashboardPage() {
       setGenerating(false);
     }
   }
+
+  async function handleCopyPrompt() {
+    if (!prompt?.prompt_text) return;
+    try {
+      await navigator.clipboard.writeText(prompt.prompt_text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  const selectedTrend =
+    trends.find((trend) => trend.id === selectedTrendId) || null;
 
   return (
     <AppShell>
@@ -102,7 +159,9 @@ export default function DashboardPage() {
       </div>
       <div className="mb-8 flex items-end justify-between">
         <div>
-          <h2 className="font-headline text-3xl font-extrabold">{t("marketVelocityDashboard")}</h2>
+          <h2 className="font-headline text-3xl font-extrabold">
+            {t("marketVelocityDashboard")}
+          </h2>
           <p className="mt-1 text-sm text-slate-300">{t("dashboardSub")}</p>
         </div>
       </div>
@@ -122,46 +181,114 @@ export default function DashboardPage() {
           </span>
         ))}
       </div>
-      {loading ? <div className="text-sm text-slate-300">{t("loadingTrends")}</div> : null}
-      {error ? <div className="mb-6 rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</div> : null}
-      {!loading && !trends.length ? <div className="text-sm text-slate-400">{t("noTrends")}</div> : null}
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <div className="columns-1 gap-5 sm:columns-2 xl:col-span-2 xl:columns-3">
-          {trends.map((trend) => (
-            <TrendCard key={trend.id} trend={trend} />
-          ))}
+      {loading ? (
+        <div className="text-sm text-slate-300">{t("loadingTrends")}</div>
+      ) : null}
+      {error ? (
+        <div className="mb-6 rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">
+          {error}
         </div>
-        <aside className="glass-panel rounded-2xl border border-white/5 p-6">
-          <h3 className="font-headline text-xl font-bold">{t("quickPromptGenerator")}</h3>
-          <p className="mt-1 text-xs text-slate-400">{t("quickPromptSub")}</p>
-          <label className="mt-4 block text-xs uppercase tracking-widest text-slate-400">{t("trend")}</label>
-          <select
-            className="mt-2 w-full rounded-xl border border-white/15 bg-black/40 p-2 text-sm"
-            value={selectedTrendId}
-            onChange={(e) => setSelectedTrendId(e.target.value)}
-          >
-            {trends.map((trend) => (
-              <option key={trend.id} value={trend.id}>
-                {trend.title}
-              </option>
-            ))}
-          </select>
-          <button
-            className="btn-gradient mt-4 w-full rounded-full px-4 py-2 text-sm font-bold text-white"
-            onClick={handleGenerate}
-            disabled={generating || !selectedTrendId}
-          >
-            {generating ? t("generating") : t("generatePrompt")}
-          </button>
-          {prompt ? (
-            <div className="mt-4 rounded-xl border border-white/10 bg-black/35 p-3 text-xs text-slate-200">
-              <p className="font-semibold text-slate-200">{prompt.payload.visual_style}</p>
-              <p className="mt-2 whitespace-pre-wrap">{prompt.prompt_text}</p>
-            </div>
-          ) : null}
-        </aside>
+      ) : null}
+      {!loading && !trends.length ? (
+        <div className="text-sm text-slate-400">{t("noTrends")}</div>
+      ) : null}
+
+      <div className="columns-1 gap-5 sm:columns-2 xl:columns-3">
+        {trends.map((trend) => (
+          <TrendCard
+            key={trend.id}
+            trend={trend}
+            onSelectForPrompt={handleSelectCardForPrompt}
+          />
+        ))}
       </div>
+      {isPromptModalOpen && selectedTrend ? (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center overflow-hidden bg-[#020204]/75 px-4 backdrop-blur-xl"
+          onClick={closePromptModal}
+        >
+          <div className="pointer-events-none absolute -left-24 top-8 h-80 w-80 rounded-full bg-indigo-400/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-fuchsia-400/15 blur-3xl" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_35%),linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0))]" />
+          <div
+            className="relative w-full max-w-xl rounded-3xl border border-white/25 bg-gradient-to-br from-white/25 via-white/[0.14] to-white/[0.08] p-6 shadow-[0_30px_100px_rgba(0,0,0,0.65)] backdrop-blur-3xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="text-[11px] uppercase tracking-[0.2em] text-slate-300">
+              {t("quickPromptGenerator")}
+            </p>
+            <h4 className="mt-2 font-headline text-xl font-bold text-white">
+              {selectedTrend.title}
+            </h4>
+            <p className="mt-1 text-xs text-slate-300">
+              {t("quickPromptModalSub")}
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                className={`rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                  selectedOutputType === "video"
+                    ? "border-white/60 bg-white/20 text-white"
+                    : "border-white/20 bg-black/20 text-slate-200 hover:border-white/40"
+                }`}
+                onClick={() => setSelectedOutputType("video")}
+              >
+                {t("quickPromptTypeVideo")}
+              </button>
+              <button
+                className={`rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                  selectedOutputType === "image"
+                    ? "border-white/60 bg-white/20 text-white"
+                    : "border-white/20 bg-black/20 text-slate-200 hover:border-white/40"
+                }`}
+                onClick={() => setSelectedOutputType("image")}
+              >
+                {t("quickPromptTypeImage")}
+              </button>
+            </div>
+            <div className="mt-5 flex gap-3">
+              <button
+                className="w-full rounded-full border border-white/20 bg-black/20 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-white/40"
+                onClick={closePromptModal}
+                disabled={generating}
+              >
+                {t("quickPromptCancel")}
+              </button>
+              <button
+                className="btn-gradient w-full rounded-full px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60"
+                onClick={handleGenerate}
+                disabled={generating}
+              >
+                {generating ? t("generating") : t("generatePrompt")}
+              </button>
+            </div>
+            {prompt ? (
+              <div className="mt-5 rounded-2xl border border-white/20 bg-black/30 p-4">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-slate-300">
+                    {t("generatedPrompt")}
+                  </p>
+                  <button
+                    className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:border-white/50"
+                    onClick={handleCopyPrompt}
+                  >
+                    {copied ? t("quickPromptCopied") : t("quickPromptCopy")}
+                  </button>
+                </div>
+                <p className="text-xs font-semibold text-slate-100">
+                  {prompt.payload.visual_style}
+                </p>
+                <p className="mt-2 max-h-56 overflow-y-auto whitespace-pre-wrap pr-1 text-sm text-slate-100">
+                  {prompt.prompt_text}
+                </p>
+              </div>
+            ) : (
+              <div className="mt-5 rounded-2xl border border-white/15 bg-black/25 p-4 text-xs text-slate-300">
+                {t("quickPromptEmpty")}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
     </AppShell>
   );
 }
