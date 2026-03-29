@@ -12,6 +12,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const links = [
     { href: "/", label: t("navDashboard") },
     { href: "/live-trends", label: t("navLiveTrends") },
+    { href: "/prompt-feed", label: t("navPromptFeed") },
     { href: "/prompt-generator", label: t("navPromptGenerator") },
     { href: "/history", label: t("navHistory") },
     { href: "/forecast", label: t("navForecast") },

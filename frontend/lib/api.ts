@@ -1,5 +1,9 @@
 import {
   ForecastResponse,
+  PromptFeedConfig,
+  PromptFeedResponse,
+  PromptEngineStatus,
+  PromptGeneratorConfig,
   PromptHistoryItem,
   PromptResult,
   SourceResultsResponse,
@@ -71,16 +75,38 @@ export const api = {
   getTiktokResults: () => apiFetch<SourceResultsResponse>("/tiktok_results"),
   getRedditResults: () => apiFetch<SourceResultsResponse>("/reddit_results"),
   getGoogleResults: () => apiFetch<SourceResultsResponse>("/google_trends_results"),
+  getPromptFeed: (query: {
+    query: string;
+    source?: string;
+    limit?: number;
+    github_owner?: string;
+    github_repo?: string;
+    github_branch?: string;
+    github_path?: string;
+  }) =>
+    apiFetch<PromptFeedResponse>(
+      `/prompt-feed?${new URLSearchParams(
+        Object.entries(query).reduce<Record<string, string>>((acc, [key, value]) => {
+          if (value !== undefined && value !== null && `${value}`.trim()) {
+            acc[key] = `${value}`;
+          }
+          return acc;
+        }, {})
+      ).toString()}`
+    ),
+  getPromptFeedConfig: () => apiFetch<PromptFeedConfig>("/prompt-feed/config"),
   generatePrompt: (payload: {
     trend_id: string;
     platform_target: string;
     output_type: string;
     user_niche?: string;
+    generator_config?: PromptGeneratorConfig;
   }) =>
     apiFetch<PromptResult>("/prompt/generate", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  getPromptEngineConfig: () => apiFetch<PromptEngineStatus>("/prompt/config"),
   getPromptHistory: () => apiFetch<PromptHistoryItem[]>("/prompt/history"),
   submitFeedback: (payload: { prompt_id: string; rating: number; notes?: string }) =>
     apiFetch<{ id: string }>("/prompt/feedback", {

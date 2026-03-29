@@ -31,6 +31,26 @@ services:
       YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
+      PROMPT_FEED_CACHE_TTL: ${PROMPT_FEED_CACHE_TTL:-900}
+      LEXICA_API_BASE_URL: ${LEXICA_API_BASE_URL:-https://lexica.art/api/v1}
+      PROMPTHERO_API_BASE_URL: ${PROMPTHERO_API_BASE_URL:-https://api.prompthero.com}
+      PROMPTHERO_ACCESS_TOKEN_URL: ${PROMPTHERO_ACCESS_TOKEN_URL:-https://api.prompthero.com/v1/access_token}
+      PROMPTHERO_RANDOM_URL: ${PROMPTHERO_RANDOM_URL:-https://api.prompthero.com/v1/random}
+      PROMPTHERO_THUMBNAILS_URL: ${PROMPTHERO_THUMBNAILS_URL:-https://api.prompthero.com/v1/thumbnails}
+      PROMPTHERO_AUTOCOMPLETE_URL: ${PROMPTHERO_AUTOCOMPLETE_URL:-https://api.prompthero.com/v1/autocomplete}
+      PROMPTHERO_RELATED_URL: ${PROMPTHERO_RELATED_URL:-https://api.prompthero.com/v1/related}
+      PROMPTHERO_BEARER_TOKEN: ${PROMPTHERO_BEARER_TOKEN:-}
+      KREA_OPEN_PROMPTS_REPO_URL: ${KREA_OPEN_PROMPTS_REPO_URL:-https://github.com/krea-ai/open-prompts}
+      KREA_OPEN_PROMPTS_CSV_URL: ${KREA_OPEN_PROMPTS_CSV_URL:-https://raw.githubusercontent.com/krea-ai/open-prompts/main/data/1k.csv}
+      GITHUB_API_BASE_URL: ${GITHUB_API_BASE_URL:-https://api.github.com}
+      GITHUB_RAW_BASE_URL: ${GITHUB_RAW_BASE_URL:-https://raw.githubusercontent.com}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      PROMPT_FEED_DEFAULT_GITHUB_OWNER: ${PROMPT_FEED_DEFAULT_GITHUB_OWNER:-krea-ai}
+      PROMPT_FEED_DEFAULT_GITHUB_REPO: ${PROMPT_FEED_DEFAULT_GITHUB_REPO:-open-prompts}
+      PROMPT_FEED_DEFAULT_GITHUB_BRANCH: ${PROMPT_FEED_DEFAULT_GITHUB_BRANCH:-main}
+      PROMPT_FEED_DEFAULT_GITHUB_PATH: ${PROMPT_FEED_DEFAULT_GITHUB_PATH:-data/1k.csv}
+      CIVITAI_API_BASE_URL: ${CIVITAI_API_BASE_URL:-https://civitai.com/api/v1}
+      CIVITAI_API_KEY: ${CIVITAI_API_KEY:-}
       TIKTOK_HEADLESS: ${TIKTOK_HEADLESS:-true}
       HTTP_PROXY: ${HTTP_PROXY:-}
       HTTPS_PROXY: ${HTTPS_PROXY:-}
@@ -58,6 +78,26 @@ services:
       YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
+      PROMPT_FEED_CACHE_TTL: ${PROMPT_FEED_CACHE_TTL:-900}
+      LEXICA_API_BASE_URL: ${LEXICA_API_BASE_URL:-https://lexica.art/api/v1}
+      PROMPTHERO_API_BASE_URL: ${PROMPTHERO_API_BASE_URL:-https://api.prompthero.com}
+      PROMPTHERO_ACCESS_TOKEN_URL: ${PROMPTHERO_ACCESS_TOKEN_URL:-https://api.prompthero.com/v1/access_token}
+      PROMPTHERO_RANDOM_URL: ${PROMPTHERO_RANDOM_URL:-https://api.prompthero.com/v1/random}
+      PROMPTHERO_THUMBNAILS_URL: ${PROMPTHERO_THUMBNAILS_URL:-https://api.prompthero.com/v1/thumbnails}
+      PROMPTHERO_AUTOCOMPLETE_URL: ${PROMPTHERO_AUTOCOMPLETE_URL:-https://api.prompthero.com/v1/autocomplete}
+      PROMPTHERO_RELATED_URL: ${PROMPTHERO_RELATED_URL:-https://api.prompthero.com/v1/related}
+      PROMPTHERO_BEARER_TOKEN: ${PROMPTHERO_BEARER_TOKEN:-}
+      KREA_OPEN_PROMPTS_REPO_URL: ${KREA_OPEN_PROMPTS_REPO_URL:-https://github.com/krea-ai/open-prompts}
+      KREA_OPEN_PROMPTS_CSV_URL: ${KREA_OPEN_PROMPTS_CSV_URL:-https://raw.githubusercontent.com/krea-ai/open-prompts/main/data/1k.csv}
+      GITHUB_API_BASE_URL: ${GITHUB_API_BASE_URL:-https://api.github.com}
+      GITHUB_RAW_BASE_URL: ${GITHUB_RAW_BASE_URL:-https://raw.githubusercontent.com}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      PROMPT_FEED_DEFAULT_GITHUB_OWNER: ${PROMPT_FEED_DEFAULT_GITHUB_OWNER:-krea-ai}
+      PROMPT_FEED_DEFAULT_GITHUB_REPO: ${PROMPT_FEED_DEFAULT_GITHUB_REPO:-open-prompts}
+      PROMPT_FEED_DEFAULT_GITHUB_BRANCH: ${PROMPT_FEED_DEFAULT_GITHUB_BRANCH:-main}
+      PROMPT_FEED_DEFAULT_GITHUB_PATH: ${PROMPT_FEED_DEFAULT_GITHUB_PATH:-data/1k.csv}
+      CIVITAI_API_BASE_URL: ${CIVITAI_API_BASE_URL:-https://civitai.com/api/v1}
+      CIVITAI_API_KEY: ${CIVITAI_API_KEY:-}
       TIKTOK_HEADLESS: ${TIKTOK_HEADLESS:-true}
       HTTP_PROXY: ${HTTP_PROXY:-}
       HTTPS_PROXY: ${HTTPS_PROXY:-}

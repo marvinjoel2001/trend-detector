@@ -6,6 +6,7 @@ import { AppShell } from "../components/app-shell";
 import { TrendCard } from "../components/trend-card";
 import { api } from "../lib/api";
 import { useI18n } from "../lib/i18n";
+import { buildPromptGeneratorConfig, loadPromptEngineSettings } from "../lib/prompt-engine-settings";
 import { getTrendMedia } from "../lib/trend-media";
 import { PromptResult, SourceStatusResponse, Trend } from "../lib/types";
 
@@ -118,6 +119,7 @@ export default function DashboardPage() {
         platform_target: "tiktok",
         output_type: selectedOutputType,
         user_niche: "technology",
+        generator_config: buildPromptGeneratorConfig(loadPromptEngineSettings()),
       });
       setPrompt(result);
     } catch (err) {

@@ -1,3 +1,5 @@
+import hashlib
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,8 +11,10 @@ from app.models.prompt_feedback import PromptFeedback
 from app.models.trend import Trend
 from app.models.user import User
 from app.schemas.prompt import (
+    PromptEngineConfigOut,
     PromptFeedbackIn,
     PromptFeedbackOut,
+    PromptGeneratorConfigIn,
     PromptGenerateIn,
     PromptGenerateOut,
     PromptHistoryOut,
@@ -32,9 +36,22 @@ async def _get_or_create_default_user(db: AsyncSession) -> User:
     return user
 
 
+def _generator_cache_signature(config: PromptGeneratorConfigIn | None) -> str:
+    if not config:
+        return f"system:{settings.gemini_model}:default"
+    model = str(config.model or "").strip() or settings.gemini_model
+    api_key = str(config.api_key or "").strip()
+    api_fingerprint = hashlib.sha256(api_key.encode("utf-8")).hexdigest()[:12] if api_key else "default"
+    return f"{config.provider}:{model}:{api_fingerprint}"
+
+
 @router.post("/generate", response_model=PromptGenerateOut)
 async def generate_prompt(payload: PromptGenerateIn, db: AsyncSession = Depends(get_db)) -> Prompt:
-    cache_key = f"prompt:gen:{payload.trend_id}:{payload.platform_target}:{payload.output_type}:{payload.user_niche or 'none'}"
+    config_signature = _generator_cache_signature(payload.generator_config)
+    cache_key = (
+        f"prompt:gen:{payload.trend_id}:{payload.platform_target}:{payload.output_type}:"
+        f"{payload.user_niche or 'none'}:{config_signature}"
+    )
     cached = await cache_get_json(cache_key)
     if cached:
         return cached
@@ -49,7 +66,13 @@ async def generate_prompt(payload: PromptGenerateIn, db: AsyncSession = Depends(
     if user is None:
         user = await _get_or_create_default_user(db)
 
-    generated = build_prompt(trend, payload.platform_target, payload.output_type, payload.user_niche or user.niche)
+    generated = build_prompt(
+        trend,
+        payload.platform_target,
+        payload.output_type,
+        payload.user_niche or user.niche,
+        generator_config=payload.generator_config,
+    )
     prompt_text = (
         f"{generated.description}. Visual Style: {generated.visual_style}. Tone: {generated.tone}. "
         f"Format: {generated.format}. Hashtags: {' '.join(generated.hashtags)}."
@@ -71,6 +94,15 @@ async def generate_prompt(payload: PromptGenerateIn, db: AsyncSession = Depends(
     response_payload = PromptGenerateOut.model_validate(prompt).model_dump(mode="json")
     await cache_set_json(cache_key, response_payload, ttl=900)
     return response_payload
+
+
+@router.get("/config", response_model=PromptEngineConfigOut)
+async def get_prompt_engine_config() -> dict[str, str | bool]:
+    return {
+        "provider": "gemini",
+        "default_model": settings.gemini_model,
+        "api_key_configured": bool(settings.gemini_api_key),
+    }
 
 
 @router.get("/history", response_model=list[PromptHistoryOut])

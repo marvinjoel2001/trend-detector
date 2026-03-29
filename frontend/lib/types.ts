@@ -62,6 +62,79 @@ export type PromptResult = {
   created_at: string;
 };
 
+export type PromptGeneratorConfig = {
+  provider: "system" | "gemini";
+  api_key?: string;
+  model?: string;
+};
+
+export type PromptEngineStatus = {
+  provider: "gemini";
+  default_model: string;
+  api_key_configured: boolean;
+};
+
+export type PromptFeedItem = {
+  source: string;
+  id: string;
+  title: string;
+  prompt: string;
+  image_url?: string | null;
+  thumbnail_url?: string | null;
+  video_url?: string | null;
+  source_url?: string | null;
+  model?: string | null;
+  width?: number | null;
+  height?: number | null;
+  metadata: Record<string, unknown>;
+};
+
+export type PromptFeedSourceStatus = {
+  source: string;
+  configured: boolean;
+  enabled: boolean;
+  items_count: number;
+  message: string;
+  requires_api_key: boolean;
+  repo?: {
+    owner: string;
+    repo: string;
+    branch: string;
+    path: string;
+  };
+};
+
+export type PromptFeedResponse = {
+  query: string;
+  source: string;
+  github: {
+    owner: string;
+    repo: string;
+    branch: string;
+    path: string;
+  };
+  items: PromptFeedItem[];
+  source_status: Record<string, PromptFeedSourceStatus>;
+};
+
+export type PromptFeedConfig = {
+  default_query: string;
+  github_defaults: {
+    owner: string;
+    repo: string;
+    branch: string;
+    path: string;
+  };
+  sources: Array<{
+    source: string;
+    configured: boolean;
+    enabled: boolean;
+    requires_api_key: boolean;
+    base_url: string;
+    note: string;
+  }>;
+};
+
 export type PromptHistoryItem = {
   id: string;
   trend_id: string;
@@ -72,4 +145,3 @@ export type PromptHistoryItem = {
   payload: Record<string, unknown>;
   created_at: string;
 };
-

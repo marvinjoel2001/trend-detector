@@ -8,6 +8,7 @@ import requests
 
 from app.core.config import get_settings
 from app.models.trend import Trend
+from app.schemas.prompt import PromptGeneratorConfigIn
 
 
 @dataclass
@@ -401,12 +402,13 @@ def _build_with_gemini(
     trend: Trend,
     platform_target: str,
     output_type: str,
+    api_key: str,
+    model: str,
     user_niche: str | None = None,
 ) -> PromptPayload:
-    if not settings.gemini_api_key:
+    if not api_key:
         raise RuntimeError("gemini_api_key_missing")
 
-    model = settings.gemini_model
     endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
     output_key = output_type.lower()
     rules = OUTPUT_TYPE_RULES.get(output_key, OUTPUT_TYPE_RULES["video"])
@@ -464,7 +466,7 @@ def _build_with_gemini(
 
     response = requests.post(
         endpoint,
-        params={"key": settings.gemini_api_key},
+        params={"key": api_key},
         json={
             "contents": [{"parts": [{"text": prompt}, *([preview_part] if preview_part else [])]}],
             "generationConfig": {"temperature": 0.2, "topP": 0.8, "candidateCount": 1},
@@ -484,14 +486,43 @@ def _build_with_gemini(
     return _sanitize_gemini_payload(payload, output_type=output_key, platform_target=platform_target, user_niche=user_niche)
 
 
-def build_prompt(trend: Trend, platform_target: str, output_type: str, user_niche: str | None = None) -> PromptPayload:
+def _resolve_generator_config(
+    generator_config: PromptGeneratorConfigIn | None,
+) -> tuple[str | None, str]:
+    override_key = str(generator_config.api_key or "").strip() if generator_config else ""
+    override_model = str(generator_config.model or "").strip() if generator_config else ""
+    api_key = override_key or settings.gemini_api_key
+    model = override_model or settings.gemini_model
+    return api_key, model
+
+
+def build_prompt(
+    trend: Trend,
+    platform_target: str,
+    output_type: str,
+    user_niche: str | None = None,
+    generator_config: PromptGeneratorConfigIn | None = None,
+) -> PromptPayload:
+    api_key, model = _resolve_generator_config(generator_config)
     try:
-        if settings.gemini_api_key:
-            payload = _build_with_gemini(trend, platform_target, output_type, user_niche=user_niche)
+        if api_key:
+            payload = _build_with_gemini(
+                trend,
+                platform_target,
+                output_type,
+                api_key=api_key,
+                model=model,
+                user_niche=user_niche,
+            )
             if payload.description and payload.visual_style and payload.tone and payload.format:
                 logger.info(
                     "prompt_generator_gemini_success",
-                    extra={"output_type": output_type.lower(), "platform_target": platform_target.lower()},
+                    extra={
+                        "output_type": output_type.lower(),
+                        "platform_target": platform_target.lower(),
+                        "gemini_model": model,
+                        "custom_api_key": bool(generator_config and str(generator_config.api_key or "").strip()),
+                    },
                 )
                 return payload
             raise RuntimeError("gemini_incomplete_payload")

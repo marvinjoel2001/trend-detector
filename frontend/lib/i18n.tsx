@@ -8,6 +8,7 @@ const translations = {
   en: {
     navDashboard: "Dashboard",
     navLiveTrends: "Live Trends",
+    navPromptFeed: "Prompt Feed",
     navPromptGenerator: "Prompt Generator",
     navHistory: "History",
     navForecast: "Forecast",
@@ -69,6 +70,7 @@ const translations = {
   es: {
     navDashboard: "Panel",
     navLiveTrends: "Tendencias en Vivo",
+    navPromptFeed: "Feed de Prompts",
     navPromptGenerator: "Generador de Prompts",
     navHistory: "Historial",
     navForecast: "Pronóstico",

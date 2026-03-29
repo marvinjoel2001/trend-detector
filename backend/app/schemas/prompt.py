@@ -1,7 +1,13 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+
+
+class PromptGeneratorConfigIn(BaseModel):
+    provider: Literal["system", "gemini"] = "system"
+    api_key: str | None = None
+    model: str | None = None
 
 
 class PromptGenerateIn(BaseModel):
@@ -10,6 +16,7 @@ class PromptGenerateIn(BaseModel):
     output_type: str
     user_niche: str | None = None
     user_id: str | None = None
+    generator_config: PromptGeneratorConfigIn | None = None
 
 
 class PromptEnginePayload(BaseModel):
@@ -65,3 +72,9 @@ class PromptFeedbackOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class PromptEngineConfigOut(BaseModel):
+    provider: Literal["gemini"] = "gemini"
+    default_model: str
+    api_key_configured: bool

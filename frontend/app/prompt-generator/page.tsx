@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "../../components/app-shell";
 import { api } from "../../lib/api";
 import { useI18n } from "../../lib/i18n";
+import { buildPromptGeneratorConfig, loadPromptEngineSettings } from "../../lib/prompt-engine-settings";
 import { PromptResult, Trend } from "../../lib/types";
 
 export default function PromptGeneratorPage() {
@@ -34,6 +35,7 @@ export default function PromptGeneratorPage() {
         platform_target: platformTarget,
         output_type: outputType,
         user_niche: niche,
+        generator_config: buildPromptGeneratorConfig(loadPromptEngineSettings()),
       });
       setResult(response);
     } catch (err) {
