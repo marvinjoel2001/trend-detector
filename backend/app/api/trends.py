@@ -28,9 +28,9 @@ async def list_trends(
     include_source_status: bool = Query(default=False),
     db: AsyncSession = Depends(get_db),
 ) -> list[dict[str, Any]] | dict[str, Any]:
-    cache_key = f"trends:list:{category or 'all'}:{platform or 'all'}:{limit}"
+    cache_key = f"trends:v2:list:{category or 'all'}:{platform or 'all'}:{limit}"
     cached = await cache_get_json(cache_key)
-    if cached:
+    if isinstance(cached, list) and cached:
         if include_source_status:
             return {"items": cached, "source_status": await get_sources_status()}
         return cached
@@ -43,7 +43,8 @@ async def list_trends(
     stmt = stmt.limit(limit)
     trends = list((await db.execute(stmt)).scalars().all())
     payload = [TrendOut.model_validate(t).model_dump(mode="json") for t in trends]
-    await cache_set_json(cache_key, payload, ttl=max(settings.cache_ttl_trends, 1800))
+    if payload:
+        await cache_set_json(cache_key, payload, ttl=max(settings.cache_ttl_trends, 1800))
     if include_source_status:
         return {"items": payload, "source_status": await get_sources_status()}
     return payload

@@ -934,9 +934,9 @@ async def get_prompt_feed(
         },
         sort_keys=True,
     )
-    cache_key = f"prompt_feed:v2:{hashlib.sha256(signature_raw.encode('utf-8')).hexdigest()}"
+    cache_key = f"prompt_feed:v3:{hashlib.sha256(signature_raw.encode('utf-8')).hexdigest()}"
     cached = await cache_get_json(cache_key)
-    if cached:
+    if isinstance(cached, dict) and cached.get("items"):
         return cached
 
     sources = [normalized_source] if normalized_source in PROMPT_FEED_SOURCES else list(PROMPT_FEED_FEED_SOURCES)
@@ -1004,5 +1004,6 @@ async def get_prompt_feed(
         "items": page_items,
         "source_status": source_status,
     }
-    await cache_set_json(cache_key, payload, ttl=max(settings.prompt_feed_cache_ttl, 300))
+    if page_items:
+        await cache_set_json(cache_key, payload, ttl=max(settings.prompt_feed_cache_ttl, 300))
     return payload

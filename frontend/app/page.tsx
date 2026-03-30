@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { AppShell } from "../components/app-shell";
 import { TrendCard } from "../components/trend-card";
@@ -21,6 +21,7 @@ function previewScore(trend: Trend): number {
 
 export default function DashboardPage() {
   const { t } = useI18n();
+  const emptyRetryRef = useRef(false);
   const [trends, setTrends] = useState<Trend[]>([]);
   const [sourceStatus, setSourceStatus] = useState<SourceStatusResponse>({});
   const [loading, setLoading] = useState(true);
@@ -38,9 +39,9 @@ export default function DashboardPage() {
   >([]);
 
   useEffect(() => {
-    api
-      .getTrendsWithStatus("?limit=50")
-      .then((data) => {
+    async function loadDashboard() {
+      try {
+        const data = await api.getTrendsWithStatus("?limit=50");
         const sortedItems = [...data.items].sort((a, b) => {
           const rankDiff = b.rank_score - a.rank_score;
           if (rankDiff !== 0) return rankDiff;
@@ -71,10 +72,39 @@ export default function DashboardPage() {
         if (alerts.length) {
           setToasts(alerts);
         }
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed loading trends");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadDashboard();
   }, []);
+
+  useEffect(() => {
+    if (loading || error || trends.length || emptyRetryRef.current) return;
+    emptyRetryRef.current = true;
+    const timer = window.setTimeout(() => {
+      setLoading(true);
+      setError(null);
+      api
+        .getTrendsWithStatus("?limit=50")
+        .then((data) => {
+          const sortedItems = [...data.items].sort((a, b) => {
+            const rankDiff = b.rank_score - a.rank_score;
+            if (rankDiff !== 0) return rankDiff;
+            return previewScore(b) - previewScore(a);
+          });
+          setTrends(sortedItems);
+          setSourceStatus(data.source_status || {});
+          if (sortedItems[0]) setSelectedTrendId(sortedItems[0].id);
+        })
+        .catch((err) => setError(err instanceof Error ? err.message : "Failed loading trends"))
+        .finally(() => setLoading(false));
+    }, 1800);
+    return () => window.clearTimeout(timer);
+  }, [error, loading, trends.length]);
 
   useEffect(() => {
     if (!toasts.length) return;

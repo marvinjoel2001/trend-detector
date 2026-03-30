@@ -50,10 +50,13 @@ function resolveWsLiveTrendsUrl(): string {
 const API_BASE = resolveApiBase();
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const method = (init?.method || "GET").toUpperCase();
+  const shouldSendJsonHeader = method !== "GET" && method !== "HEAD";
   const response = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(shouldSendJsonHeader ? { "Content-Type": "application/json" } : {}),
       ...(init?.headers || {}),
     },
     cache: "no-store",

@@ -91,6 +91,7 @@ function PromptFeedImage({ item }: { item: PromptFeedItem }) {
 export default function PromptFeedPage() {
   const { language } = useI18n();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const emptyRetryRef = useRef(false);
 
   const [config, setConfig] = useState<PromptFeedConfig | null>(null);
   const [result, setResult] = useState<PromptFeedResponse | null>(null);
@@ -305,6 +306,24 @@ export default function PromptFeedPage() {
     observer.observe(node);
     return () => observer.disconnect();
   }, [hasMore, items.length, loading, loadingMore, nextOffset, source, githubOwner, githubRepo, githubBranch, githubPath]);
+
+  useEffect(() => {
+    if (loading || loadingMore || error || items.length || emptyRetryRef.current) return;
+    emptyRetryRef.current = true;
+    const timer = window.setTimeout(() => {
+      void loadFeed({
+        reset: true,
+        sourceOverride: source,
+        githubOverride: {
+          owner: githubOwner,
+          repo: githubRepo,
+          branch: githubBranch,
+          path: githubPath,
+        },
+      });
+    }, 1800);
+    return () => window.clearTimeout(timer);
+  }, [error, githubBranch, githubOwner, githubPath, githubRepo, items.length, loading, loadingMore, source]);
 
   async function copyPrompt(item: PromptFeedItem) {
     const prompt = item.prompt?.trim();
