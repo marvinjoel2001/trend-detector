@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useMemo, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
 
 type Language = "en" | "es";
 
@@ -148,7 +148,11 @@ function resolveInitialLanguage(): Language {
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>(resolveInitialLanguage);
+  const [language, setLanguage] = useState<Language>("en");
+
+  useEffect(() => {
+    setLanguage(resolveInitialLanguage());
+  }, []);
 
   const value = useMemo<I18nContextType>(
     () => ({

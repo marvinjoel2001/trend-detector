@@ -11,7 +11,8 @@ router = APIRouter(prefix="/prompt-feed")
 async def list_prompt_feed(
     query: str = Query(default=""),
     source: str = Query(default="all"),
-    limit: int = Query(default=12, ge=1, le=40),
+    limit: int = Query(default=24, ge=1, le=48),
+    offset: int = Query(default=0, ge=0),
     github_owner: str | None = Query(default=None),
     github_repo: str | None = Query(default=None),
     github_branch: str | None = Query(default=None),
@@ -21,6 +22,7 @@ async def list_prompt_feed(
         query=query,
         source=source,
         limit=limit,
+        offset=offset,
         github_owner=github_owner,
         github_repo=github_repo,
         github_branch=github_branch,

@@ -1,4 +1,5 @@
 import {
+  ForecastExplanation,
   ForecastResponse,
   PromptFeedConfig,
   PromptFeedResponse,
@@ -71,14 +72,20 @@ export const api = {
   getSourcesStatus: () => apiFetch<SourceStatusResponse>("/sources/status"),
   getTrend: (id: string) => apiFetch<TrendDetailResponse>(`/trends/${id}`),
   getForecast: (id: string) => apiFetch<ForecastResponse>(`/trends/forecast/${id}`),
+  explainForecast: (payload: { trend_id: string; language?: string; generator_config?: PromptGeneratorConfig }) =>
+    apiFetch<ForecastExplanation>("/trends/forecast/explain", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   getYoutubeResults: () => apiFetch<SourceResultsResponse>("/youtube_results"),
   getTiktokResults: () => apiFetch<SourceResultsResponse>("/tiktok_results"),
   getRedditResults: () => apiFetch<SourceResultsResponse>("/reddit_results"),
   getGoogleResults: () => apiFetch<SourceResultsResponse>("/google_trends_results"),
   getPromptFeed: (query: {
-    query: string;
+    query?: string;
     source?: string;
     limit?: number;
+    offset?: number;
     github_owner?: string;
     github_repo?: string;
     github_branch?: string;

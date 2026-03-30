@@ -9,11 +9,12 @@ from app.db.session import get_db
 from app.models.trend import Trend
 from app.models.trend_forecast import TrendForecast
 from app.models.trend_snapshot import TrendSnapshot
-from app.schemas.trend import ForecastOut, TrendDetailOut, TrendOut
+from app.schemas.trend import ForecastExplainIn, ForecastExplanationOut, ForecastOut, TrendDetailOut, TrendOut
 from app.services.ingestion_controller import get_source_results, get_sources_status
 from app.services.cache import cache_get_json, cache_set_json
 from app.core.config import get_settings
 from app.services.forecast import generate_forecast
+from app.services.forecast_explainer import explain_forecast
 
 router = APIRouter()
 settings = get_settings()
@@ -110,6 +111,52 @@ async def get_forecast(trend_id: str, db: AsyncSession = Depends(get_db)) -> dic
     }
     await cache_set_json(cache_key, payload, ttl=max(settings.cache_ttl_forecast, 1800))
     return payload
+
+
+@router.post("/trends/forecast/explain", response_model=ForecastExplanationOut)
+async def explain_trend_forecast(payload: ForecastExplainIn, db: AsyncSession = Depends(get_db)) -> dict[str, Any]:
+    cache_key = (
+        f"forecast:explain:{payload.trend_id}:{payload.language or 'en'}:"
+        f"{settings.gemini_model}:{bool(payload.generator_config)}"
+    )
+    cached = await cache_get_json(cache_key)
+    if cached and not payload.generator_config:
+        return cached
+
+    trend = await db.get(Trend, payload.trend_id)
+    if not trend:
+        raise HTTPException(status_code=404, detail="Trend not found")
+
+    snapshots = (
+        await db.execute(
+            select(TrendSnapshot)
+            .where(TrendSnapshot.trend_id == payload.trend_id)
+            .order_by(TrendSnapshot.snapshot_ts.asc())
+            .limit(48)
+        )
+    ).scalars().all()
+    serialized_snapshots = [
+        {"snapshot_ts": item.snapshot_ts.isoformat(), "metric_views": item.metric_views, "velocity_score": item.velocity_score}
+        for item in snapshots
+    ]
+    series = [(item.snapshot_ts, float(item.metric_views)) for item in snapshots]
+    points, confidence = generate_forecast(series, horizon_hours=6)
+    serialized_points = [
+        {"ts": point["ts"].isoformat() if hasattr(point["ts"], "isoformat") else str(point["ts"]), "momentum": float(point["momentum"])}
+        for point in points
+    ]
+
+    explanation = explain_forecast(
+        trend,
+        serialized_snapshots,
+        serialized_points,
+        confidence,
+        language=payload.language or "en",
+        generator_config=payload.generator_config,
+    )
+    if not payload.generator_config:
+        await cache_set_json(cache_key, explanation, ttl=max(settings.cache_ttl_forecast, 1800))
+    return explanation
 
 
 @router.get("/google_trends_results")

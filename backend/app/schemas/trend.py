@@ -3,6 +3,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from app.schemas.prompt import PromptGeneratorConfigIn
+
 
 class TrendOut(BaseModel):
     id: str
@@ -43,3 +45,21 @@ class ForecastOut(BaseModel):
     horizon_hours: int
     confidence: float
     points: list[ForecastPoint]
+
+
+class ForecastExplainIn(BaseModel):
+    trend_id: str
+    language: str | None = None
+    generator_config: PromptGeneratorConfigIn | None = None
+
+
+class ForecastExplanationOut(BaseModel):
+    title: str
+    summary: str
+    outlook: str
+    could_go_viral: bool
+    virality_window_hours: float | None = None
+    virality_window_days: float | None = None
+    based_on: list[str] = Field(default_factory=list)
+    methodology: str
+    generated_with: str

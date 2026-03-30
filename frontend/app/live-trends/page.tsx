@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "../../components/app-shell";
 import { api, wsLiveTrendsUrl } from "../../lib/api";
@@ -14,10 +14,6 @@ type LiveEvent = {
   items: Array<Record<string, unknown>>;
   source: "snapshot" | "ws";
 };
-
-function formatEventName(value: string): string {
-  return value.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase());
-}
 
 function formatMetric(value: unknown): string {
   if (typeof value === "number") {
@@ -34,10 +30,7 @@ function formatTimestamp(value: string): string {
   return parsed.toLocaleString();
 }
 
-function buildSnapshotEvents(
-  trends: Trend[],
-  sourceStatus: SourceStatusResponse,
-): LiveEvent[] {
+function buildSnapshotEvents(trends: Trend[], sourceStatus: SourceStatusResponse): LiveEvent[] {
   const now = new Date().toISOString();
   const events: LiveEvent[] = [];
 
@@ -93,37 +86,94 @@ export default function LiveTrendsPage() {
   const copy =
     language === "es"
       ? {
-          snapshotTitle: "Snapshot actual",
-          snapshotSub: "Tendencias que ya existen en base y que ahora sí cargan apenas entras a la vista.",
-          eventFeed: "Feed en vivo",
-          eventFeedSub: "Eventos nuevos del WebSocket sobre el snapshot inicial.",
-          loading: "Cargando snapshot en vivo...",
-          noEvents: "Aún no llegaron eventos nuevos. El snapshot inicial ya está cargado.",
-          noTrends: "No hay tendencias cargadas todavía.",
-          rankScore: "Rank",
-          velocity: "Velocidad",
-          liveStatus: "Estado",
-          lastHeartbeat: "Heartbeat",
+          subtitle:
+            "Esta pantalla mezcla dos cosas: un snapshot actual de las tendencias guardadas y eventos nuevos que van entrando cuando el sistema detecta cambios.",
+          statusTitle: "Que estas viendo",
+          statusSnapshot: "Snapshot actual",
+          statusSnapshotDesc: "Es la foto mas reciente de lo que ya esta guardado en base de datos.",
+          statusWs: "Feed en vivo",
+          statusWsDesc: "Son eventos nuevos enviados por WebSocket cuando una tendencia cambia o aparece una nueva.",
+          statusHeartbeat: "Heartbeat",
+          statusHeartbeatDesc: "Solo confirma que la conexion en vivo sigue abierta.",
+          liveTitle: "Estado de la conexion",
+          liveStatus: "Conexion",
+          lastHeartbeat: "Ultimo heartbeat",
           sources: "Fuentes",
+          loading: "Cargando tendencias en vivo...",
+          snapshotTitle: "Snapshot actual",
+          snapshotSub: "Top tendencias guardadas en este momento. Aqui ves ranking, velocidad y plataforma.",
+          noTrends: "Todavia no hay tendencias guardadas.",
+          rankScore: "Rank score",
+          velocity: "Velocidad",
+          platform: "Plataforma",
+          timestamp: "Actualizado",
+          eventFeed: "Eventos en vivo",
+          eventFeedSub: "Cada tarjeta explica un cambio detectado por el sistema.",
+          noEvents: "Aun no llegaron eventos nuevos. El snapshot inicial ya esta cargado.",
           snapshot: "Snapshot",
           websocket: "WebSocket",
+          eventMeaning: "Que significa",
+          sourceStateTitle: "Estado de fuentes",
+          itemsCount: "Items",
+          updatedAt: "Actualizado",
+          eventDescriptions: {
+            current_trend_snapshot: "Resumen del ranking actual guardado en la base.",
+            source_status_snapshot: "Estado actual de cada conector de ingesta.",
+            new_trend_detected: "Se detecto una tendencia nueva y fue guardada.",
+            velocity_score_changed: "Cambio en la velocidad de crecimiento de una tendencia.",
+            trend_ranking_changed: "Se actualizo la posicion de las tendencias en el ranking.",
+            live_update: "Actualizacion en vivo recibida desde el backend.",
+          } as Record<string, string>,
         }
       : {
-          snapshotTitle: "Current snapshot",
-          snapshotSub: "Trends already stored in the database and loaded as soon as this page opens.",
-          eventFeed: "Live feed",
-          eventFeedSub: "New WebSocket events layered on top of the initial snapshot.",
-          loading: "Loading live snapshot...",
-          noEvents: "No new events yet. The initial snapshot is already loaded.",
-          noTrends: "No trends available yet.",
-          rankScore: "Rank",
-          velocity: "Velocity",
-          liveStatus: "Status",
-          lastHeartbeat: "Heartbeat",
+          subtitle:
+            "This screen blends two things: a current snapshot of stored trends and newly arriving events whenever the system detects changes.",
+          statusTitle: "What you are seeing",
+          statusSnapshot: "Current snapshot",
+          statusSnapshotDesc: "This is the latest picture of what is already stored in the database.",
+          statusWs: "Live feed",
+          statusWsDesc: "These are new WebSocket events sent when a trend changes or a new one appears.",
+          statusHeartbeat: "Heartbeat",
+          statusHeartbeatDesc: "This only confirms the live connection is still open.",
+          liveTitle: "Connection status",
+          liveStatus: "Connection",
+          lastHeartbeat: "Last heartbeat",
           sources: "Sources",
+          loading: "Loading live trends...",
+          snapshotTitle: "Current snapshot",
+          snapshotSub: "Top stored trends right now. You can read ranking, velocity, and platform here.",
+          noTrends: "No stored trends yet.",
+          rankScore: "Rank score",
+          velocity: "Velocity",
+          platform: "Platform",
+          timestamp: "Updated",
+          eventFeed: "Live events",
+          eventFeedSub: "Each card explains a change detected by the system.",
+          noEvents: "No new events yet. The initial snapshot is already loaded.",
           snapshot: "Snapshot",
           websocket: "WebSocket",
+          eventMeaning: "Meaning",
+          sourceStateTitle: "Source status",
+          itemsCount: "Items",
+          updatedAt: "Updated",
+          eventDescriptions: {
+            current_trend_snapshot: "Summary of the current ranking stored in the database.",
+            source_status_snapshot: "Current state of each ingestion connector.",
+            new_trend_detected: "A new trend was detected and stored.",
+            velocity_score_changed: "A trend changed its growth speed.",
+            trend_ranking_changed: "The ranking order of trends was updated.",
+            live_update: "Live update received from the backend.",
+          } as Record<string, string>,
         };
+
+  const describedEvents = useMemo(
+    () =>
+      events.map((event) => ({
+        ...event,
+        description: copy.eventDescriptions[event.event] || copy.eventDescriptions.live_update,
+      })),
+    [events, copy.eventDescriptions]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -180,7 +230,6 @@ export default function LiveTrendsPage() {
         const parsed = JSON.parse(message.data) as {
           event?: string;
           timestamp?: string;
-          ts?: number;
           items?: Array<Record<string, unknown>>;
         };
 
@@ -216,7 +265,7 @@ export default function LiveTrendsPage() {
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <h2 className="font-headline text-3xl font-bold">{t("liveTrendEvents")}</h2>
-            <p className="mt-2 text-sm text-slate-300">{copy.snapshotSub}</p>
+            <p className="mt-2 max-w-4xl text-sm text-slate-300">{copy.subtitle}</p>
           </div>
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="rounded-full border border-white/10 px-3 py-1 text-slate-200">
@@ -231,11 +280,29 @@ export default function LiveTrendsPage() {
           </div>
         </div>
 
+        <section className="glass-panel rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+          <h3 className="font-headline text-xl font-bold text-white">{copy.statusTitle}</h3>
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
+              <p className="text-sm font-semibold text-white">{copy.statusSnapshot}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-300">{copy.statusSnapshotDesc}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
+              <p className="text-sm font-semibold text-white">{copy.statusWs}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-300">{copy.statusWsDesc}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
+              <p className="text-sm font-semibold text-white">{copy.statusHeartbeat}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-300">{copy.statusHeartbeatDesc}</p>
+            </div>
+          </div>
+        </section>
+
         {loadingSnapshot ? <div className="text-sm text-slate-300">{copy.loading}</div> : null}
         {error ? <div className="rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200">{error}</div> : null}
 
-        <div className="grid gap-6 xl:grid-cols-[1.1fr,0.9fr]">
-          <section className="glass-panel rounded-3xl border border-white/10 p-6">
+        <div className="grid gap-6 xl:grid-cols-[1.08fr,0.92fr]">
+          <section className="glass-panel rounded-3xl border border-white/10 bg-white/[0.04] p-6">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
                 <h3 className="font-headline text-xl font-bold text-white">{copy.snapshotTitle}</h3>
@@ -271,11 +338,11 @@ export default function LiveTrendsPage() {
                       <p className="mt-1 text-sm font-semibold text-white">{formatMetric(trend.velocity_score)}</p>
                     </div>
                     <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-                      <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Platform</p>
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">{copy.platform}</p>
                       <p className="mt-1 text-sm font-semibold text-white">{trend.platform}</p>
                     </div>
                     <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-                      <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Timestamp</p>
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">{copy.timestamp}</p>
                       <p className="mt-1 text-sm font-semibold text-white">{formatTimestamp(trend.timestamp)}</p>
                     </div>
                   </div>
@@ -284,7 +351,7 @@ export default function LiveTrendsPage() {
             </div>
           </section>
 
-          <section className="glass-panel rounded-3xl border border-white/10 p-6">
+          <section className="glass-panel rounded-3xl border border-white/10 bg-white/[0.04] p-6">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
                 <h3 className="font-headline text-xl font-bold text-white">{copy.eventFeed}</h3>
@@ -295,14 +362,14 @@ export default function LiveTrendsPage() {
               </span>
             </div>
 
-            {!events.length ? <p className="text-sm text-slate-400">{copy.noEvents}</p> : null}
+            {!describedEvents.length ? <p className="text-sm text-slate-400">{copy.noEvents}</p> : null}
 
             <div className="space-y-3">
-              {events.map((event) => (
+              {describedEvents.map((event) => (
                 <article key={event.id} className="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-sm font-semibold text-white">{formatEventName(event.event)}</p>
+                      <p className="text-sm font-semibold text-white">{event.event.replaceAll("_", " ")}</p>
                       <p className="mt-1 text-xs text-slate-400">{formatTimestamp(event.timestamp)}</p>
                     </div>
                     <span
@@ -315,6 +382,12 @@ export default function LiveTrendsPage() {
                       {event.source}
                     </span>
                   </div>
+
+                  <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-3">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">{copy.eventMeaning}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-200">{event.description}</p>
+                  </div>
+
                   <div className="mt-4 space-y-2">
                     {event.items.length ? (
                       event.items.map((item, index) => (
@@ -322,7 +395,7 @@ export default function LiveTrendsPage() {
                           <div className="grid gap-2 sm:grid-cols-2">
                             {Object.entries(item).map(([key, value]) => (
                               <div key={key}>
-                                <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">{formatEventName(key)}</p>
+                                <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">{key.replaceAll("_", " ")}</p>
                                 <p className="mt-1 break-words text-sm text-slate-100">{formatMetric(value)}</p>
                               </div>
                             ))}
@@ -338,6 +411,41 @@ export default function LiveTrendsPage() {
             </div>
           </section>
         </div>
+
+        <section className="glass-panel rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+          <h3 className="font-headline text-xl font-bold text-white">{copy.sourceStateTitle}</h3>
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {Object.values(sourceStatus).map((item) => (
+              <article key={item.source} className="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-white">{item.source}</p>
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] ${
+                      item.status === "real"
+                        ? "border border-emerald-300/20 bg-emerald-400/10 text-emerald-100"
+                        : item.status === "unavailable"
+                          ? "border border-red-300/20 bg-red-400/10 text-red-100"
+                          : "border border-amber-300/20 bg-amber-400/10 text-amber-100"
+                    }`}
+                  >
+                    {item.status}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-slate-300">{item.message}</p>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">{copy.itemsCount}</p>
+                    <p className="mt-1 text-sm font-semibold text-white">{item.items_count}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">{copy.updatedAt}</p>
+                    <p className="mt-1 text-sm font-semibold text-white">{item.updated_at ? formatTimestamp(item.updated_at) : "N/A"}</p>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
     </AppShell>
   );

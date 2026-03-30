@@ -12,12 +12,15 @@ import requests
 
 from app.core.config import get_settings
 from app.services.cache import cache_get_json, cache_set_json
+from app.services.ingestion_controller import SOURCE_SPECS, get_source_results
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
 _media_probe_cache: dict[str, bool] = {}
 
-PROMPT_FEED_SOURCES = ("lexica", "prompthero", "krea", "github", "civitai")
+PROMPT_FEED_SOURCES = ("lexica", "prompthero", "krea", "github", "civitai", "youtube", "reddit", "tiktok")
+PROMPT_FEED_FEED_SOURCES = ("prompthero", "krea", "github", "civitai", "youtube", "reddit", "tiktok")
+SOCIAL_PROMPT_FEED_SOURCES = ("youtube", "reddit", "tiktok")
 
 
 def _trim(value: str | None, fallback: str = "") -> str:
@@ -120,13 +123,15 @@ def _is_reachable_media_url(url: str | None) -> bool:
 
 
 def _pick_reachable_media_url(candidates: list[Any]) -> str | None:
+    normalized_candidates: list[str] = []
     for candidate in candidates:
         url = _normalize_media_url(candidate)
         if not url:
             continue
+        normalized_candidates.append(url)
         if _is_reachable_media_url(url):
             return url
-    return None
+    return normalized_candidates[0] if normalized_candidates else None
 
 
 def _extract_markdown_image_url(text: str) -> str | None:
@@ -225,6 +230,146 @@ def _build_feed_item(
         "height": height,
         "metadata": metadata or {},
     }
+
+
+def _social_source_config(source: str) -> tuple[bool, bool, str]:
+    if source == "youtube":
+        configured = bool(_trim(settings.youtube_api_key))
+        return configured, True, "Trending videos with thumbnails from the YouTube API"
+    if source == "reddit":
+        configured = bool(_trim(settings.reddit_client_id)) and bool(_trim(settings.reddit_client_secret))
+        return configured, True, "Hot Reddit posts with preview images or videos"
+    if source == "tiktok":
+        return True, True, "TikTok discover scrape with post and hashtag previews"
+    return True, True, "Social visual source"
+
+
+def _social_requires_api_key(source: str) -> bool:
+    return source in {"youtube", "reddit"}
+
+
+def _social_dimensions(source: str) -> tuple[int | None, int | None]:
+    if source == "tiktok":
+        return 1080, 1920
+    if source == "youtube":
+        return 1280, 720
+    if source == "reddit":
+        return 1200, 675
+    return None, None
+
+
+def _build_social_reference_prompt(source: str, title: str, metadata: dict[str, Any]) -> str:
+    safe_title = title.strip() or f"{source} trend"
+    if source == "tiktok":
+        hashtag = _trim(metadata.get("hashtag"), "")
+        hashtag_hint = f" Lean into the language and vibe of {hashtag}." if hashtag else ""
+        return (
+            f'Create a TikTok-style vertical concept inspired by "{safe_title}". '
+            "Use a strong first-frame hook, mobile-first composition, bold lighting contrast, dynamic movement, "
+            "and a creator-native pacing that feels viral in the first two seconds."
+            f"{hashtag_hint} Keep it visually clear enough to work as both cover frame and short-form storyboard."
+        )
+    if source == "youtube":
+        channel = _trim(metadata.get("channel"), "")
+        channel_hint = f" Borrow the creator energy of {channel} without copying branding." if channel else ""
+        return (
+            f'Create a YouTube Shorts concept inspired by "{safe_title}". '
+            "Focus on a thumbnail-ready frame, clear subject separation, strong contrast, readable focal point, "
+            "and short-form editing energy that would still feel compelling as a preview image."
+            f"{channel_hint}"
+        )
+    subreddit = _trim(metadata.get("subreddit"), "")
+    subreddit_hint = f" Ground the scene in the culture of r/{subreddit}." if subreddit else ""
+    return (
+        f'Create a shareable social visual inspired by the Reddit post "{safe_title}". '
+        "Turn the idea into an instantly understandable scene, meme visual, or cover-style composition with strong context, "
+        "internet-native humor or relevance, and a focal point that reads fast in feed."
+        f"{subreddit_hint}"
+    )
+
+
+def _social_source_url(source: str, metadata: dict[str, Any]) -> str | None:
+    direct = _normalize_media_url(metadata.get("source_url"))
+    if direct:
+        return direct
+    video_id = _trim(metadata.get("video_id"), "")
+    if source == "youtube" and video_id:
+        return f"https://www.youtube.com/watch?v={video_id}"
+    return None
+
+
+def _social_preview_image(source: str, metadata: dict[str, Any]) -> str | None:
+    video_id = _trim(metadata.get("video_id"), "")
+    youtube_thumbnail = f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg" if source == "youtube" and video_id else None
+    return _pick_reachable_media_url(
+        [
+            metadata.get("thumbnail_url"),
+            metadata.get("image_url"),
+            metadata.get("preview_image_url"),
+            youtube_thumbnail,
+        ]
+    )
+
+
+async def _collect_social_feed(source: str, limit: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    spec = SOURCE_SPECS.get(source)
+    cached_items = await cache_get_json(spec.cache_key) if spec else None
+    raw_items = cached_items if isinstance(cached_items, list) and cached_items else None
+    used_cache = raw_items is not None
+    if raw_items is None:
+        raw_items = await get_source_results(source)
+
+    configured, enabled, _note = _social_source_config(source)
+    items: list[dict[str, Any]] = []
+
+    for index, raw_item in enumerate(raw_items or []):
+        if not isinstance(raw_item, dict):
+            continue
+        metadata = raw_item.get("metadata")
+        if not isinstance(metadata, dict):
+            metadata = {}
+
+        title = _trim(raw_item.get("title"), f"{source} trend")
+        prompt = _trim(metadata.get("prompt") or metadata.get("reference_prompt"), "")
+        prompt_origin = "source" if prompt else "synthesized"
+        if not prompt:
+            prompt = _build_social_reference_prompt(source, title, metadata)
+
+        image_url = _social_preview_image(source, metadata)
+        video_url = _normalize_media_url(metadata.get("video_url"))
+        width, height = _social_dimensions(source)
+
+        items.append(
+            _build_feed_item(
+                source=source,
+                external_id=_trim(raw_item.get("id"), f"{source}-{index}"),
+                title=title,
+                prompt=prompt,
+                image_url=image_url,
+                thumbnail_url=image_url,
+                video_url=video_url,
+                source_url=_social_source_url(source, metadata),
+                width=width,
+                height=height,
+                metadata={**metadata, "prompt_origin": prompt_origin, "reference_platform": source},
+            )
+        )
+
+        if len(items) >= limit:
+            break
+
+    message = "cached_ok" if used_cache and items else "ok" if items else "no_results"
+    if not items and not configured and _social_requires_api_key(source):
+        message = "missing_credentials"
+    status = _source_status(
+        source,
+        configured=configured,
+        enabled=enabled or bool(items),
+        items_count=len(items),
+        message=message,
+        requires_api_key=_social_requires_api_key(source),
+    )
+    return items, status
 
 
 def _collect_lexica(query: str, limit: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
@@ -699,14 +844,6 @@ def get_prompt_feed_config() -> dict[str, Any]:
         "github_defaults": github_defaults,
         "sources": [
             {
-                "source": "lexica",
-                "configured": True,
-                "enabled": True,
-                "requires_api_key": False,
-                "base_url": settings.lexica_api_base_url,
-                "note": "Official public search API",
-            },
-            {
                 "source": "prompthero",
                 "configured": bool(_trim(settings.prompthero_bearer_token)),
                 "enabled": bool(_trim(settings.prompthero_bearer_token)),
@@ -738,6 +875,30 @@ def get_prompt_feed_config() -> dict[str, Any]:
                 "base_url": settings.civitai_api_base_url,
                 "note": "Images API sorted by most reactions with optional token",
             },
+            {
+                "source": "youtube",
+                "configured": bool(_trim(settings.youtube_api_key)),
+                "enabled": True,
+                "requires_api_key": True,
+                "base_url": "https://www.googleapis.com/youtube/v3/videos",
+                "note": "Trending videos with thumbnails from the YouTube API",
+            },
+            {
+                "source": "reddit",
+                "configured": bool(_trim(settings.reddit_client_id)) and bool(_trim(settings.reddit_client_secret)),
+                "enabled": True,
+                "requires_api_key": True,
+                "base_url": "https://www.reddit.com",
+                "note": "Hot Reddit posts with preview images and videos",
+            },
+            {
+                "source": "tiktok",
+                "configured": True,
+                "enabled": True,
+                "requires_api_key": False,
+                "base_url": settings.tiktok_search_url,
+                "note": "Discover scrape with post and hashtag thumbnails",
+            },
         ],
     }
 
@@ -746,7 +907,8 @@ async def get_prompt_feed(
     *,
     query: str,
     source: str = "all",
-    limit: int = 12,
+    limit: int = 24,
+    offset: int = 0,
     github_owner: str | None = None,
     github_repo: str | None = None,
     github_branch: str | None = None,
@@ -754,6 +916,8 @@ async def get_prompt_feed(
 ) -> dict[str, Any]:
     normalized_query = _trim(query, "")
     normalized_source = _trim(source, "all").lower()
+    normalized_offset = max(offset, 0)
+    normalized_limit = max(limit, 1)
     github_defaults = _github_defaults(
         owner=github_owner,
         repo=github_repo,
@@ -764,18 +928,23 @@ async def get_prompt_feed(
         {
             "query": normalized_query,
             "source": normalized_source,
-            "limit": limit,
+            "limit": normalized_limit,
+            "offset": normalized_offset,
             "github": github_defaults,
         },
         sort_keys=True,
     )
-    cache_key = f"prompt_feed:{hashlib.sha256(signature_raw.encode('utf-8')).hexdigest()}"
+    cache_key = f"prompt_feed:v2:{hashlib.sha256(signature_raw.encode('utf-8')).hexdigest()}"
     cached = await cache_get_json(cache_key)
     if cached:
         return cached
 
-    sources = [normalized_source] if normalized_source in PROMPT_FEED_SOURCES else list(PROMPT_FEED_SOURCES)
-    per_source_limit = limit if len(sources) == 1 else max(3, min(limit, 6))
+    sources = [normalized_source] if normalized_source in PROMPT_FEED_SOURCES else list(PROMPT_FEED_FEED_SOURCES)
+    page_window = max(normalized_offset + (normalized_limit * 3), normalized_limit * 3)
+    if len(sources) == 1:
+        per_source_limit = min(max(page_window, 48), 160)
+    else:
+        per_source_limit = min(max(page_window, 48), 120)
 
     items: list[dict[str, Any]] = []
     source_status: dict[str, dict[str, Any]] = {}
@@ -790,6 +959,8 @@ async def get_prompt_feed(
                 current_items, status = _collect_krea(normalized_query, per_source_limit)
             elif source_name == "civitai":
                 current_items, status = _collect_civitai(normalized_query, per_source_limit)
+            elif source_name in SOCIAL_PROMPT_FEED_SOURCES:
+                current_items, status = await _collect_social_feed(source_name, per_source_limit)
             else:
                 current_items, status = _collect_github(
                     normalized_query,
@@ -817,13 +988,20 @@ async def get_prompt_feed(
         items.extend(current_items)
         source_status[source_name] = status
 
-    items = _finalize_feed_items(items, limit, seed=f"{normalized_query}:{normalized_source}")
+    ranked_items = _finalize_feed_items(items, page_window, seed=f"{normalized_query}:{normalized_source}")
+    page_items = ranked_items[normalized_offset : normalized_offset + normalized_limit]
+    has_more = len(ranked_items) > (normalized_offset + normalized_limit)
+    next_offset = normalized_offset + len(page_items) if has_more else None
 
     payload = {
         "query": normalized_query,
         "source": normalized_source,
+        "offset": normalized_offset,
+        "limit": normalized_limit,
+        "has_more": has_more,
+        "next_offset": next_offset,
         "github": github_defaults,
-        "items": items,
+        "items": page_items,
         "source_status": source_status,
     }
     await cache_set_json(cache_key, payload, ttl=max(settings.prompt_feed_cache_ttl, 300))

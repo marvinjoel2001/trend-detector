@@ -13,13 +13,18 @@ export function AppShell({ children }: { children: ReactNode }) {
     { href: "/", label: t("navDashboard") },
     { href: "/live-trends", label: t("navLiveTrends") },
     { href: "/prompt-feed", label: t("navPromptFeed") },
-    { href: "/prompt-generator", label: t("navPromptGenerator") },
     { href: "/history", label: t("navHistory") },
     { href: "/forecast", label: t("navForecast") },
     { href: "/settings", label: t("navSettings") },
   ];
   return (
     <div className="h-screen overflow-hidden bg-transparent text-[var(--on-surface)]">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -left-24 -top-12 h-[28rem] w-[28rem] rounded-full bg-cyan-400/16 blur-[120px]" />
+        <div className="absolute right-[-8rem] top-[8%] h-[34rem] w-[34rem] rounded-full bg-indigo-400/14 blur-[140px]" />
+        <div className="absolute bottom-[-10rem] left-[20%] h-[30rem] w-[30rem] rounded-full bg-emerald-400/10 blur-[130px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.11),transparent_28%),radial-gradient(circle_at_80%_18%,rgba(34,211,238,0.08),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0)),linear-gradient(135deg,#04070d_0%,#07111a_36%,#08131d_62%,#04070d_100%)]" />
+      </div>
       <aside className="fixed left-0 top-0 h-screen w-64 border-r border-white/5 bg-black/45 p-6 backdrop-blur-xl">
         <div className="mb-10">
           <span className="text-gradient block font-headline text-2xl font-extrabold tracking-tight">TrendPrompt</span>

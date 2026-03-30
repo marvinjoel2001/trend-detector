@@ -45,6 +45,18 @@ export type ForecastResponse = {
   points: Array<{ ts: string; momentum: number }>;
 };
 
+export type ForecastExplanation = {
+  title: string;
+  summary: string;
+  outlook: string;
+  could_go_viral: boolean;
+  virality_window_hours?: number | null;
+  virality_window_days?: number | null;
+  based_on: string[];
+  methodology: string;
+  generated_with: string;
+};
+
 export type PromptResult = {
   prompt_id: string;
   prompt_text: string;
@@ -107,6 +119,10 @@ export type PromptFeedSourceStatus = {
 export type PromptFeedResponse = {
   query: string;
   source: string;
+  offset: number;
+  limit: number;
+  has_more: boolean;
+  next_offset: number | null;
   github: {
     owner: string;
     repo: string;
