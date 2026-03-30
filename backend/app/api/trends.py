@@ -15,38 +15,78 @@ from app.services.cache import cache_get_json, cache_set_json
 from app.core.config import get_settings
 from app.services.forecast import generate_forecast
 from app.services.forecast_explainer import explain_forecast
+from app.services.geo_targets import normalize_geo_code
+from app.services.ingestion import run_ingestion_cycle
 
 router = APIRouter()
 settings = get_settings()
+
+
+def _is_strict_geo_match(trend: Trend, geo_code: str | None) -> bool:
+    if not geo_code:
+        return True
+    metadata = trend.metadata_json or {}
+    if str(metadata.get("geo_code") or "US").upper() != geo_code:
+        return False
+    if geo_code != "US" and not bool(metadata.get("geo_precise")):
+        return False
+    return True
 
 
 @router.get("/trends")
 async def list_trends(
     category: str | None = Query(default=None),
     platform: str | None = Query(default=None),
+    geo: str | None = Query(default=None),
     limit: int = Query(default=20, ge=1, le=100),
     include_source_status: bool = Query(default=False),
     db: AsyncSession = Depends(get_db),
 ) -> list[dict[str, Any]] | dict[str, Any]:
-    cache_key = f"trends:v2:list:{category or 'all'}:{platform or 'all'}:{limit}"
+    geo_code = normalize_geo_code(geo)
+    cache_key = f"trends:v4:list:{geo_code}:{category or 'all'}:{platform or 'all'}:{limit}"
     cached = await cache_get_json(cache_key)
     if isinstance(cached, list) and cached:
         if include_source_status:
-            return {"items": cached, "source_status": await get_sources_status()}
+            return {"items": cached, "source_status": await get_sources_status(geo_code=geo_code)}
         return cached
 
     stmt = select(Trend).order_by(Trend.rank_score.desc())
-    if category:
-        stmt = stmt.where(Trend.category == category)
-    if platform:
-        stmt = stmt.where(Trend.platform == platform)
-    stmt = stmt.limit(limit)
     trends = list((await db.execute(stmt)).scalars().all())
-    payload = [TrendOut.model_validate(t).model_dump(mode="json") for t in trends]
+
+    def _filter(items: list[Trend]) -> list[Trend]:
+        filtered = items
+        if geo_code:
+            filtered = [item for item in filtered if _is_strict_geo_match(item, geo_code)]
+        if category:
+            filtered = [item for item in filtered if item.category == category]
+        if platform:
+            filtered = [item for item in filtered if item.platform == platform]
+        return filtered[:limit]
+
+    filtered_trends = _filter(trends)
+    if geo_code and not filtered_trends:
+        refresh_sources: list[str] | None
+        if platform:
+            refresh_sources = [] if geo_code != "US" and platform == "tiktok" else [platform]
+        else:
+            refresh_sources = ["google", "youtube"] if geo_code != "US" else None
+
+        if refresh_sources is None or refresh_sources:
+            await run_ingestion_cycle(
+                db,
+                sources=refresh_sources,
+                force=True,
+                geo_code=geo_code,
+                emit_events=False,
+            )
+            trends = list((await db.execute(stmt)).scalars().all())
+            filtered_trends = _filter(trends)
+
+    payload = [TrendOut.model_validate(t).model_dump(mode="json") for t in filtered_trends]
     if payload:
         await cache_set_json(cache_key, payload, ttl=max(settings.cache_ttl_trends, 1800))
     if include_source_status:
-        return {"items": payload, "source_status": await get_sources_status()}
+        return {"items": payload, "source_status": await get_sources_status(geo_code=geo_code)}
     return payload
 
 
@@ -161,49 +201,53 @@ async def explain_trend_forecast(payload: ForecastExplainIn, db: AsyncSession = 
 
 
 @router.get("/google_trends_results")
-async def get_google_trends_results(refresh: bool = Query(default=False)) -> list[dict[str, Any]]:
-    cache_key = "google_trends_results"
+async def get_google_trends_results(refresh: bool = Query(default=False), geo: str | None = Query(default=None)) -> list[dict[str, Any]]:
+    geo_code = normalize_geo_code(geo)
+    cache_key = f"google_trends_results:{geo_code.lower()}"
     cached = None if refresh else await cache_get_json(cache_key)
     if cached:
         return cached
-    payload = await get_source_results("google")
+    payload = await get_source_results("google", geo_code=geo_code)
     await cache_set_json(cache_key, payload, ttl=max(settings.source_cache_ttl_seconds, 1800))
     return payload
 
 
 @router.get("/reddit_results")
-async def get_reddit_results(refresh: bool = Query(default=False)) -> list[dict[str, Any]]:
-    cache_key = "reddit_results"
+async def get_reddit_results(refresh: bool = Query(default=False), geo: str | None = Query(default=None)) -> list[dict[str, Any]]:
+    geo_code = normalize_geo_code(geo)
+    cache_key = f"reddit_results:{geo_code.lower()}"
     cached = None if refresh else await cache_get_json(cache_key)
     if cached:
         return cached
-    payload = await get_source_results("reddit")
+    payload = await get_source_results("reddit", geo_code=geo_code)
     await cache_set_json(cache_key, payload, ttl=max(settings.source_cache_ttl_seconds, 1800))
     return payload
 
 
 @router.get("/youtube_results")
-async def get_youtube_results(refresh: bool = Query(default=False)) -> list[dict[str, Any]]:
-    cache_key = "youtube_results"
+async def get_youtube_results(refresh: bool = Query(default=False), geo: str | None = Query(default=None)) -> list[dict[str, Any]]:
+    geo_code = normalize_geo_code(geo)
+    cache_key = f"youtube_results:{geo_code.lower()}"
     cached = None if refresh else await cache_get_json(cache_key)
     if cached:
         return cached
-    payload = await get_source_results("youtube")
+    payload = await get_source_results("youtube", geo_code=geo_code)
     await cache_set_json(cache_key, payload, ttl=max(settings.source_cache_ttl_seconds, 1800))
     return payload
 
 
 @router.get("/tiktok_results")
-async def get_tiktok_results(refresh: bool = Query(default=False)) -> list[dict[str, Any]]:
-    cache_key = "tiktok_results"
+async def get_tiktok_results(refresh: bool = Query(default=False), geo: str | None = Query(default=None)) -> list[dict[str, Any]]:
+    geo_code = normalize_geo_code(geo)
+    cache_key = f"tiktok_results:{geo_code.lower()}"
     cached = None if refresh else await cache_get_json(cache_key)
     if cached and not any((item.get("title") or "").strip() in {"", "trend"} for item in cached):
         return cached
-    payload = await get_source_results("tiktok")
+    payload = await get_source_results("tiktok", geo_code=geo_code)
     await cache_set_json(cache_key, payload, ttl=max(settings.source_cache_ttl_seconds, 1800))
     return payload
 
 
 @router.get("/sources/status")
-async def get_ingestion_sources_status() -> dict[str, dict[str, Any]]:
-    return await get_sources_status()
+async def get_ingestion_sources_status(geo: str | None = Query(default=None)) -> dict[str, dict[str, Any]]:
+    return await get_sources_status(geo_code=normalize_geo_code(geo))

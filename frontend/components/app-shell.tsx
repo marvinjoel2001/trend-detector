@@ -13,6 +13,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { href: "/", label: t("navDashboard") },
     { href: "/live-trends", label: t("navLiveTrends") },
     { href: "/prompt-feed", label: t("navPromptFeed") },
+    { href: "/tiktok-studio", label: t("navTikTokStudio") },
     { href: "/history", label: t("navHistory") },
     { href: "/forecast", label: t("navForecast") },
     { href: "/settings", label: t("navSettings") },

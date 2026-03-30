@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "../../components/app-shell";
+import { LoadingSkeleton } from "../../components/loading-skeleton";
 import { api, wsLiveTrendsUrl } from "../../lib/api";
 import { useI18n } from "../../lib/i18n";
+import { buildGeoQuery, getTrendRegionOption, loadPromptEngineSettings } from "../../lib/prompt-engine-settings";
 import { SourceStatusResponse, Trend } from "../../lib/types";
 
 type LiveEvent = {
@@ -82,6 +84,7 @@ export default function LiveTrendsPage() {
   const [lastHeartbeat, setLastHeartbeat] = useState<string>("");
   const [loadingSnapshot, setLoadingSnapshot] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const region = getTrendRegionOption(loadPromptEngineSettings().trendRegionCode);
 
   const copy =
     language === "es"
@@ -174,12 +177,13 @@ export default function LiveTrendsPage() {
       })),
     [events, copy.eventDescriptions]
   );
+  const showSnapshotSkeleton = loadingSnapshot && !trends.length;
 
   useEffect(() => {
     let cancelled = false;
 
     api
-      .getTrendsWithStatus("?limit=12")
+      .getTrendsWithStatus(buildGeoQuery({ limit: 12 }))
       .then((data) => {
         if (cancelled) return;
         setTrends(data.items || []);
@@ -266,6 +270,9 @@ export default function LiveTrendsPage() {
           <div>
             <h2 className="font-headline text-3xl font-bold">{t("liveTrendEvents")}</h2>
             <p className="mt-2 max-w-4xl text-sm text-slate-300">{copy.subtitle}</p>
+            <div className="mt-3 inline-flex rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-cyan-100">
+              Region: {region.label}
+            </div>
           </div>
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="rounded-full border border-white/10 px-3 py-1 text-slate-200">
@@ -316,6 +323,27 @@ export default function LiveTrendsPage() {
             {!loadingSnapshot && !trends.length ? <p className="text-sm text-slate-400">{copy.noTrends}</p> : null}
 
             <div className="space-y-3">
+              {showSnapshotSkeleton
+                ? Array.from({ length: 4 }).map((_, index) => (
+                    <article
+                      key={`live-snapshot-skeleton-${index}`}
+                      className="rounded-2xl border border-white/10 bg-slate-950/30 p-4"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-2">
+                          <LoadingSkeleton className="h-4 w-28" />
+                          <LoadingSkeleton className="h-6 w-56" />
+                        </div>
+                        <LoadingSkeleton className="h-12 w-20" />
+                      </div>
+                      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                        {Array.from({ length: 3 }).map((__, blockIndex) => (
+                          <LoadingSkeleton key={`live-snapshot-block-${index}-${blockIndex}`} className="h-20 w-full" />
+                        ))}
+                      </div>
+                    </article>
+                  ))
+                : null}
               {trends.map((trend, index) => (
                 <article key={trend.id} className="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
                   <div className="flex items-start justify-between gap-3">
@@ -362,9 +390,30 @@ export default function LiveTrendsPage() {
               </span>
             </div>
 
-            {!describedEvents.length ? <p className="text-sm text-slate-400">{copy.noEvents}</p> : null}
+            {!showSnapshotSkeleton && !describedEvents.length ? <p className="text-sm text-slate-400">{copy.noEvents}</p> : null}
 
             <div className="space-y-3">
+              {showSnapshotSkeleton
+                ? Array.from({ length: 3 }).map((_, index) => (
+                    <article
+                      key={`live-event-skeleton-${index}`}
+                      className="rounded-2xl border border-white/10 bg-slate-950/30 p-4"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-2">
+                          <LoadingSkeleton className="h-5 w-40" />
+                          <LoadingSkeleton className="h-4 w-28" />
+                        </div>
+                        <LoadingSkeleton className="h-7 w-20 rounded-full" />
+                      </div>
+                      <LoadingSkeleton className="mt-4 h-20 w-full" />
+                      <div className="mt-4 space-y-2">
+                        <LoadingSkeleton className="h-20 w-full" />
+                        <LoadingSkeleton className="h-20 w-full" />
+                      </div>
+                    </article>
+                  ))
+                : null}
               {describedEvents.map((event) => (
                 <article key={event.id} className="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
                   <div className="flex items-start justify-between gap-4">

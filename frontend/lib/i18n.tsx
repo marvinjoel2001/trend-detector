@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, ReactNode, useContext, useMemo, useState } from "react";
 
 type Language = "en" | "es";
 
@@ -10,6 +10,7 @@ const translations = {
     navLiveTrends: "Live Trends",
     navPromptFeed: "Prompt Feed",
     navPromptGenerator: "Prompt Generator",
+    navTikTokStudio: "TikTok Studio",
     navHistory: "History",
     navForecast: "Forecast",
     navSettings: "Settings",
@@ -72,6 +73,7 @@ const translations = {
     navLiveTrends: "Tendencias en Vivo",
     navPromptFeed: "Feed de Prompts",
     navPromptGenerator: "Generador de Prompts",
+    navTikTokStudio: "TikTok Studio",
     navHistory: "Historial",
     navForecast: "Pronóstico",
     navSettings: "Configuración",
@@ -148,11 +150,7 @@ function resolveInitialLanguage(): Language {
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("en");
-
-  useEffect(() => {
-    setLanguage(resolveInitialLanguage());
-  }, []);
+  const [language, setLanguage] = useState<Language>(() => resolveInitialLanguage());
 
   const value = useMemo<I18nContextType>(
     () => ({

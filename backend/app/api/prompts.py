@@ -1,6 +1,8 @@
 import hashlib
+import json
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+import requests
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,9 +20,11 @@ from app.schemas.prompt import (
     PromptGenerateIn,
     PromptGenerateOut,
     PromptHistoryOut,
+    MediaPromptGenerateOut,
 )
 from app.services.cache import cache_get_json, cache_set_json
 from app.services.prompt_generator import build_prompt
+from app.services.video_prompt_generator import generate_media_prompt
 
 router = APIRouter(prefix="/prompt")
 settings = get_settings()
@@ -103,6 +107,53 @@ async def get_prompt_engine_config() -> dict[str, str | bool]:
         "default_model": settings.gemini_model,
         "api_key_configured": bool(settings.gemini_api_key),
     }
+
+
+@router.post("/video-analyze", response_model=MediaPromptGenerateOut)
+async def analyze_video_prompt(
+    platform_target: str = Form(default="tiktok"),
+    desired_output: str = Form(default="video-remix"),
+    source_url: str | None = Form(default=None),
+    notes: str | None = Form(default=None),
+    user_niche: str | None = Form(default=None),
+    generator_config_json: str | None = Form(default=None),
+    files: list[UploadFile] | None = File(default=None),
+) -> dict:
+    generator_config = None
+    if generator_config_json:
+        try:
+            generator_config = PromptGeneratorConfigIn.model_validate(json.loads(generator_config_json))
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(status_code=400, detail=f"Invalid generator_config_json: {exc}") from exc
+
+    prepared_files: list[dict[str, str | bytes]] = []
+    for upload in files or []:
+        content = await upload.read()
+        if not content:
+            continue
+        prepared_files.append(
+            {
+                "filename": upload.filename or "upload",
+                "mime_type": upload.content_type or "application/octet-stream",
+                "data": content,
+            }
+        )
+
+    try:
+        return generate_media_prompt(
+            uploaded_files=prepared_files,
+            source_url=source_url,
+            platform_target=platform_target,
+            desired_output=desired_output,
+            notes=notes,
+            user_niche=user_niche,
+            generator_config=generator_config,
+        )
+    except requests.HTTPError as exc:  # type: ignore[name-defined]
+        response_text = exc.response.text if exc.response is not None else str(exc)
+        raise HTTPException(status_code=502, detail=response_text) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.get("/history", response_model=list[PromptHistoryOut])

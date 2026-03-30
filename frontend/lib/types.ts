@@ -161,3 +161,29 @@ export type PromptHistoryItem = {
   payload: Record<string, unknown>;
   created_at: string;
 };
+
+export type MediaPromptResult = {
+  prompt_text: string;
+  generated_with: string;
+  payload: {
+    summary: string;
+    hook: string;
+    subject: string;
+    motion: string;
+    camera: string;
+    visual_style: string;
+    aspect_ratio: string;
+    hashtags: string[];
+    scene_beats: string[];
+    clone_notes: string[];
+    safety_notes: string[];
+  };
+  analyzed_inputs: Array<{
+    source_type: string;
+    name: string;
+    mime_type?: string | null;
+    origin: string;
+    size_bytes?: number | null;
+    source_url?: string | null;
+  }>;
+};

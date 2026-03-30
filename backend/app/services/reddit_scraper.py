@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from app.core.config import get_settings
+from app.services.geo_targets import attach_geo_metadata, resolve_geo_target
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +42,11 @@ def get_reddit_fallback_trends() -> list[dict[str, Any]]:
     ]
 
 
-async def fetch_reddit_trends() -> list[dict[str, Any]]:
+async def fetch_reddit_trends(geo_code: str | None = None) -> list[dict[str, Any]]:
     settings = get_settings()
     if not settings.reddit_client_id or not settings.reddit_client_secret:
         raise RuntimeError("reddit_credentials_missing")
+    target = resolve_geo_target(geo_code)
 
     def _call() -> list[dict[str, Any]]:
         import praw
@@ -90,15 +92,19 @@ async def fetch_reddit_trends() -> list[dict[str, Any]]:
                         "title": post.title,
                         "platform": "reddit",
                         "timestamp": now,
-                        "metadata": {
-                            "views": score * 45,
-                            "likes": score,
-                            "subreddit": sub,
-                            "comments": int(post.num_comments or 0),
-                            "thumbnail_url": image_url,
-                            "source_url": source_url,
-                            "video_url": video_url,
-                        },
+                        "metadata": attach_geo_metadata(
+                            {
+                                "views": score * 45,
+                                "likes": score,
+                                "subreddit": sub,
+                                "comments": int(post.num_comments or 0),
+                                "thumbnail_url": image_url,
+                                "source_url": source_url,
+                                "video_url": video_url,
+                            },
+                            target.code,
+                            precise=False,
+                        ),
                     }
                 )
 

@@ -77,8 +77,10 @@ async def _upsert_trend(db: AsyncSession, normalized: dict[str, Any]) -> tuple[T
 def _normalize(item: dict[str, Any]) -> dict[str, Any]:
     metadata = item.get("metadata", {})
     category = categorize_text(item["title"], metadata)
+    geo_code = str(metadata.get("geo_code") or "US").strip().upper()
+    external_id = str(item.get("id") or "").strip() or item.get("title", "untitled")
     return {
-        "external_id": item.get("id"),
+        "external_id": f"{geo_code}:{external_id}",
         "title": item.get("title", "Untitled Trend"),
         "platform": item.get("platform", "unknown"),
         "category": category,
@@ -93,11 +95,13 @@ async def run_ingestion_cycle(
     broadcaster: Callable[[dict[str, Any]], Awaitable[None]] | None = None,
     sources: list[str] | None = None,
     force: bool = False,
+    geo_code: str | None = None,
+    emit_events: bool = True,
 ) -> dict[str, int]:
     logger.info("Starting ingestion cycle", extra={"context": "ingestion_cycle", "status": "started"})
     all_items: list[dict[str, Any]] = []
 
-    controller = IngestionController()
+    controller = IngestionController(geo_code=geo_code)
     collected = await controller.collect_sources(sources=sources, force=force)
     for source_name, items in collected.items():
         logger.info(
@@ -149,20 +153,21 @@ async def run_ingestion_cycle(
         else:
             await publish_live_event(payload)
 
-    if new_events:
-        await emit({"event": "new_trend_detected", "timestamp": datetime.utcnow().isoformat(), "items": new_events})
-    if velocity_events:
+    if emit_events:
+        if new_events:
+            await emit({"event": "new_trend_detected", "timestamp": datetime.utcnow().isoformat(), "items": new_events})
+        if velocity_events:
+            await emit(
+                {"event": "velocity_score_changed", "timestamp": datetime.utcnow().isoformat(), "items": velocity_events[:20]}
+            )
+        rankings = (await db.execute(select(Trend.id, Trend.title, Trend.rank_score).order_by(Trend.rank_score.desc()).limit(10))).all()
         await emit(
-            {"event": "velocity_score_changed", "timestamp": datetime.utcnow().isoformat(), "items": velocity_events[:20]}
+            {
+                "event": "trend_ranking_changed",
+                "timestamp": datetime.utcnow().isoformat(),
+                "items": [{"trend_id": r.id, "title": r.title, "rank_score": r.rank_score} for r in rankings],
+            }
         )
-    rankings = (await db.execute(select(Trend.id, Trend.title, Trend.rank_score).order_by(Trend.rank_score.desc()).limit(10))).all()
-    await emit(
-        {
-            "event": "trend_ranking_changed",
-            "timestamp": datetime.utcnow().isoformat(),
-            "items": [{"trend_id": r.id, "title": r.title, "rank_score": r.rank_score} for r in rankings],
-        }
-    )
 
     result = {"total": len(all_items), "created": created, "updated": updated}
     logger.info("Ingestion cycle done result=%s", result)

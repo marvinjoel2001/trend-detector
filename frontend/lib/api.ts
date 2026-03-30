@@ -1,6 +1,7 @@
 import {
   ForecastExplanation,
   ForecastResponse,
+  MediaPromptResult,
   PromptFeedConfig,
   PromptFeedResponse,
   PromptEngineStatus,
@@ -68,11 +69,27 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
+async function apiUpload<T>(path: string, body: FormData): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    body,
+    headers: {
+      Accept: "application/json",
+    },
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Request failed: ${response.status}`);
+  }
+  return (await response.json()) as T;
+}
+
 export const api = {
   getTrends: (query = "") => apiFetch<Trend[]>(`/trends${query}`),
   getTrendsWithStatus: (query = "") =>
     apiFetch<TrendsWithStatusResponse>(`/trends${query ? `${query}&` : "?"}include_source_status=true`),
-  getSourcesStatus: () => apiFetch<SourceStatusResponse>("/sources/status"),
+  getSourcesStatus: (query = "") => apiFetch<SourceStatusResponse>(`/sources/status${query}`),
   getTrend: (id: string) => apiFetch<TrendDetailResponse>(`/trends/${id}`),
   getForecast: (id: string) => apiFetch<ForecastResponse>(`/trends/forecast/${id}`),
   explainForecast: (payload: { trend_id: string; language?: string; generator_config?: PromptGeneratorConfig }) =>
@@ -80,10 +97,10 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  getYoutubeResults: () => apiFetch<SourceResultsResponse>("/youtube_results"),
-  getTiktokResults: () => apiFetch<SourceResultsResponse>("/tiktok_results"),
-  getRedditResults: () => apiFetch<SourceResultsResponse>("/reddit_results"),
-  getGoogleResults: () => apiFetch<SourceResultsResponse>("/google_trends_results"),
+  getYoutubeResults: (query = "") => apiFetch<SourceResultsResponse>(`/youtube_results${query}`),
+  getTiktokResults: (query = "") => apiFetch<SourceResultsResponse>(`/tiktok_results${query}`),
+  getRedditResults: (query = "") => apiFetch<SourceResultsResponse>(`/reddit_results${query}`),
+  getGoogleResults: (query = "") => apiFetch<SourceResultsResponse>(`/google_trends_results${query}`),
   getPromptFeed: (query: {
     query?: string;
     source?: string;
@@ -117,6 +134,7 @@ export const api = {
       body: JSON.stringify(payload),
     }),
   getPromptEngineConfig: () => apiFetch<PromptEngineStatus>("/prompt/config"),
+  analyzeVideoPrompt: (payload: FormData) => apiUpload<MediaPromptResult>("/prompt/video-analyze", payload),
   getPromptHistory: () => apiFetch<PromptHistoryItem[]>("/prompt/history"),
   submitFeedback: (payload: { prompt_id: string; rating: number; notes?: string }) =>
     apiFetch<{ id: string }>("/prompt/feedback", {

@@ -9,6 +9,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.services.cache import cache_get_json, cache_set_json, redis_client
+from app.services.geo_targets import normalize_geo_code
 from app.services.google_trends import fetch_google_trends
 from app.services.reddit_scraper import fetch_reddit_trends
 from app.services.retry import with_retry
@@ -23,8 +24,8 @@ _controller_lock = asyncio.Lock()
 @dataclass(frozen=True)
 class SourceSpec:
     name: str
-    fetcher: Callable[[], Awaitable[list[dict[str, Any]]]]
-    cache_key: str
+    fetcher: Callable[[str | None], Awaitable[list[dict[str, Any]]]]
+    cache_prefix: str
     interval_minutes: int
 
 
@@ -32,36 +33,43 @@ SOURCE_SPECS: dict[str, SourceSpec] = {
     "google": SourceSpec(
         name="google",
         fetcher=fetch_google_trends,
-        cache_key="google_trends_results",
+        cache_prefix="google_trends_results",
         interval_minutes=settings.source_interval_google_minutes,
     ),
     "youtube": SourceSpec(
         name="youtube",
         fetcher=fetch_youtube_trends,
-        cache_key="youtube_results",
+        cache_prefix="youtube_results",
         interval_minutes=settings.source_interval_youtube_minutes,
     ),
     "reddit": SourceSpec(
         name="reddit",
         fetcher=fetch_reddit_trends,
-        cache_key="reddit_results",
+        cache_prefix="reddit_results",
         interval_minutes=settings.source_interval_reddit_minutes,
     ),
     "tiktok": SourceSpec(
         name="tiktok",
         fetcher=fetch_tiktok_trends,
-        cache_key="tiktok_results",
+        cache_prefix="tiktok_results",
         interval_minutes=settings.source_interval_tiktok_minutes,
     ),
 }
 
 
 class IngestionController:
-    def __init__(self) -> None:
-        self._lock_key = "ingestion:global:lock"
+    def __init__(self, geo_code: str | None = None) -> None:
+        self.geo_code = normalize_geo_code(geo_code)
+        self._lock_key = f"ingestion:global:lock:{self.geo_code.lower()}"
+
+    def _geo_suffix(self) -> str:
+        return self.geo_code.lower()
+
+    def _cache_key(self, spec: SourceSpec) -> str:
+        return f"{spec.cache_prefix}:{self._geo_suffix()}"
 
     def _status_key(self, source: str) -> str:
-        return f"ingestion:source:status:{source}"
+        return f"ingestion:source:status:{source}:{self._geo_suffix()}"
 
     async def _set_source_status(
         self,
@@ -102,7 +110,7 @@ class IngestionController:
             _controller_lock.release()
 
     def _rate_key(self, source: str) -> str:
-        return f"ingestion:source:last_run:{source}"
+        return f"ingestion:source:last_run:{source}:{self._geo_suffix()}"
 
     async def _is_due(self, spec: SourceSpec, force: bool) -> bool:
         if force:
@@ -128,19 +136,29 @@ class IngestionController:
         started = time.perf_counter()
         try:
             items = await with_retry(
-                spec.fetcher,
+                lambda: spec.fetcher(self.geo_code),
                 retries=settings.source_retry_attempts,
                 base_delay_seconds=settings.source_retry_base_delay_seconds,
                 context=f"fetch_{spec.name}",
                 source=spec.name,
             )
             used_fallback = any(item.get("metadata", {}).get("fallback") for item in items)
+            approximate_geo = any(item.get("metadata", {}).get("geo_precise") is False for item in items)
             ttl = max(settings.source_cache_ttl_seconds, 1800)
-            await cache_set_json(spec.cache_key, items, ttl=ttl)
+            await cache_set_json(self._cache_key(spec), items, ttl=ttl)
             await self._mark_run(spec)
-            status = "fallback" if used_fallback else "real"
-            message = "fallback_data_ok" if used_fallback else "real_data_ok"
-            response_status = "ok_fallback" if used_fallback else "ok"
+            if used_fallback:
+                status = "fallback"
+                message = "fallback_data_ok"
+                response_status = "ok_fallback"
+            elif approximate_geo:
+                status = "approximate"
+                message = "best_effort_geo_only"
+                response_status = "ok_approximate"
+            else:
+                status = "real"
+                message = "real_data_ok"
+                response_status = "ok"
             logger.info(
                 "source_fetch_success",
                 extra={
@@ -163,7 +181,7 @@ class IngestionController:
             )
             return items
         except Exception as exc:  # noqa: BLE001
-            cached = await cache_get_json(spec.cache_key)
+            cached = await cache_get_json(self._cache_key(spec))
             if cached:
                 logger.warning(
                     "source_fetch_failed_using_cache",
@@ -219,13 +237,13 @@ class IngestionController:
         force: bool = False,
         bypass_lock: bool = False,
     ) -> dict[str, list[dict[str, Any]]]:
-        target_sources = sources or ["google", "youtube", "reddit", "tiktok"]
+        target_sources = sources or (["google", "youtube", "reddit", "tiktok"] if self.geo_code == "US" else ["google", "youtube", "tiktok"])
         acquired = True if bypass_lock else await self._acquire_global_lock()
         if not acquired:
             payloads: dict[str, list[dict[str, Any]]] = {}
             for source_name in target_sources:
                 if source_name in SOURCE_SPECS:
-                    cached = await cache_get_json(SOURCE_SPECS[source_name].cache_key)
+                    cached = await cache_get_json(self._cache_key(SOURCE_SPECS[source_name]))
                     if cached:
                         payloads[source_name] = cached
                         await self._set_source_status(
@@ -256,7 +274,7 @@ class IngestionController:
                     continue
                 due = await self._is_due(spec, force=force)
                 if not due:
-                    cached = await cache_get_json(spec.cache_key)
+                    cached = await cache_get_json(self._cache_key(spec))
                     if cached:
                         cached_has_fallback = any(item.get("metadata", {}).get("fallback") for item in cached)
                         payloads[source_name] = cached
@@ -286,15 +304,15 @@ class IngestionController:
                 await self._release_global_lock()
 
 
-async def get_source_results(source: str) -> list[dict[str, Any]]:
-    controller = IngestionController()
+async def get_source_results(source: str, geo_code: str | None = None) -> list[dict[str, Any]]:
+    controller = IngestionController(geo_code=geo_code)
     payload = await controller.collect_sources(sources=[source], force=True, bypass_lock=True)
     return payload.get(source, [])
 
 
-async def get_sources_status(sources: list[str] | None = None) -> dict[str, dict[str, Any]]:
-    target_sources = sources or ["google", "youtube", "reddit", "tiktok"]
-    controller = IngestionController()
+async def get_sources_status(sources: list[str] | None = None, geo_code: str | None = None) -> dict[str, dict[str, Any]]:
+    controller = IngestionController(geo_code=geo_code)
+    target_sources = sources or (["google", "youtube", "reddit", "tiktok"] if controller.geo_code == "US" else ["google", "youtube", "tiktok"])
     result: dict[str, dict[str, Any]] = {}
     for source in target_sources:
         status_payload = await cache_get_json(controller._status_key(source))

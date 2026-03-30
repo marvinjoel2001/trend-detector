@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { AppShell } from "../../components/app-shell";
+import { LoadingSkeleton } from "../../components/loading-skeleton";
 import { api } from "../../lib/api";
 import { useI18n } from "../../lib/i18n";
 import { PromptFeedConfig, PromptFeedItem, PromptFeedResponse } from "../../lib/types";
@@ -482,6 +483,35 @@ export default function PromptFeedPage() {
 
         {error ? <div className="rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200">{error}</div> : null}
         {!loading && !items.length ? <div className="text-sm text-slate-400">{copy.noItems}</div> : null}
+
+        {loading && !items.length ? (
+          <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <article
+                key={`prompt-feed-skeleton-${index}`}
+                className="glass-panel overflow-hidden rounded-3xl border border-white/10"
+              >
+                <LoadingSkeleton className="aspect-[4/3] w-full rounded-none border-x-0 border-t-0" />
+                <div className="space-y-4 p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <LoadingSkeleton className="h-6 w-24 rounded-full" />
+                    <LoadingSkeleton className="h-6 w-24 rounded-full" />
+                  </div>
+                  <LoadingSkeleton className="h-7 w-3/4" />
+                  <LoadingSkeleton className="h-32 w-full" />
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <LoadingSkeleton className="h-20 w-full" />
+                    <LoadingSkeleton className="h-20 w-full" />
+                  </div>
+                  <div className="flex gap-3">
+                    <LoadingSkeleton className="h-10 w-28 rounded-full" />
+                    <LoadingSkeleton className="h-10 w-28 rounded-full" />
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : null}
 
         <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
           {items.map((item) => {

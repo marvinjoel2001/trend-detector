@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 
 import { AppShell } from "../../components/app-shell";
+import { LoadingSkeleton } from "../../components/loading-skeleton";
 import { SimpleLineChart } from "../../components/simple-line-chart";
 import { api } from "../../lib/api";
 import { useI18n } from "../../lib/i18n";
-import { buildPromptGeneratorConfig, loadPromptEngineSettings } from "../../lib/prompt-engine-settings";
+import { buildGeoQuery, buildPromptGeneratorConfig, getTrendRegionOption, loadPromptEngineSettings } from "../../lib/prompt-engine-settings";
 import { ForecastExplanation, ForecastResponse, Trend, TrendDetailResponse } from "../../lib/types";
 
 function compactNumber(value: number): string {
@@ -25,6 +26,7 @@ export default function ForecastPage() {
   const [loading, setLoading] = useState(true);
   const [forecastLoading, setForecastLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const region = getTrendRegionOption(loadPromptEngineSettings().trendRegionCode);
 
   const copy =
     language === "es"
@@ -79,7 +81,7 @@ export default function ForecastPage() {
 
   useEffect(() => {
     api
-      .getTrends("?limit=20")
+      .getTrends(buildGeoQuery({ limit: 20 }))
       .then((data) => {
         setTrends(data);
         if (data[0]) setSelected(data[0].id);
@@ -91,11 +93,14 @@ export default function ForecastPage() {
   useEffect(() => {
     if (!selected) return;
     let active = true;
-    setForecastLoading(true);
-    setError(null);
-    setDetail(null);
-    setForecast(null);
-    setExplanation(null);
+    queueMicrotask(() => {
+      if (!active) return;
+      setForecastLoading(true);
+      setError(null);
+      setDetail(null);
+      setForecast(null);
+      setExplanation(null);
+    });
 
     Promise.allSettled([
       api.getTrend(selected),
@@ -155,6 +160,8 @@ export default function ForecastPage() {
   const currentBaseline = historicalValues[historicalValues.length - 1] || 0;
   const projectedClose = forecastValues[forecastValues.length - 1] || currentBaseline;
   const projectedChange = currentBaseline > 0 ? ((projectedClose - currentBaseline) / currentBaseline) * 100 : 0;
+  const showTrendListSkeleton = loading && !trends.length;
+  const showForecastSkeleton = (loading || forecastLoading) && !error;
 
   return (
     <AppShell>
@@ -169,6 +176,9 @@ export default function ForecastPage() {
         <div className="mb-6">
           <h2 className="font-headline text-3xl font-bold">{t("forecastAnalytics")}</h2>
           <p className="mt-2 max-w-3xl text-sm text-slate-300">{copy.subtitle}</p>
+          <div className="mt-3 inline-flex rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-cyan-100">
+            Region: {region.label}
+          </div>
         </div>
 
         {loading ? <div className="text-sm text-slate-300">{t("loadingForecastTrends")}</div> : null}
@@ -178,6 +188,11 @@ export default function ForecastPage() {
           <section className="glass-panel rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
             <h3 className="font-headline text-lg font-bold">{copy.detailsLabel}</h3>
             <div className="mt-4 space-y-2">
+              {showTrendListSkeleton
+                ? Array.from({ length: 6 }).map((_, index) => (
+                    <LoadingSkeleton key={`forecast-list-skeleton-${index}`} className="h-20 w-full" />
+                  ))
+                : null}
               {trends.map((trend) => (
                 <button
                   key={trend.id}
@@ -204,7 +219,16 @@ export default function ForecastPage() {
                 <p className="mt-2 text-sm text-slate-300">{copy.chartSub}</p>
               </div>
 
-              {!detail || !forecast ? (
+              {showForecastSkeleton ? (
+                <>
+                  <div className="grid gap-3 md:grid-cols-4">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <LoadingSkeleton key={`forecast-metric-skeleton-${index}`} className="h-24 w-full" />
+                    ))}
+                  </div>
+                  <LoadingSkeleton className="mt-5 h-72 w-full" />
+                </>
+              ) : !detail || !forecast ? (
                 <p className="text-sm text-slate-400">{t("selectTrendForecast")}</p>
               ) : (
                 <>
@@ -267,10 +291,18 @@ export default function ForecastPage() {
                 ) : null}
               </div>
 
-              {forecastLoading ? <p className="text-sm text-slate-300">{t("generating")}</p> : null}
-              {!forecastLoading && !explanation ? <p className="text-sm text-slate-400">{copy.noExplanation}</p> : null}
+              {showForecastSkeleton ? (
+                <div className="space-y-4">
+                  <LoadingSkeleton className="h-28 w-full" />
+                  <div className="grid gap-4 lg:grid-cols-[0.9fr,1.1fr]">
+                    <LoadingSkeleton className="h-40 w-full" />
+                    <LoadingSkeleton className="h-40 w-full" />
+                  </div>
+                </div>
+              ) : null}
+              {!showForecastSkeleton && !explanation ? <p className="text-sm text-slate-400">{copy.noExplanation}</p> : null}
 
-              {explanation ? (
+              {!showForecastSkeleton && explanation ? (
                 <div className="space-y-5">
                   <div className="rounded-3xl border border-white/10 bg-black/20 p-5">
                     <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200">{explanation.outlook}</p>

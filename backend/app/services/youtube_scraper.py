@@ -7,6 +7,7 @@ from typing import Any
 import requests
 
 from app.core.config import get_settings
+from app.services.geo_targets import attach_geo_metadata, resolve_geo_target
 from app.services.user_agents import get_next_user_agent, get_proxy_config
 
 logger = logging.getLogger(__name__)
@@ -46,10 +47,11 @@ def get_youtube_fallback_trends() -> list[dict[str, Any]]:
     ]
 
 
-async def fetch_youtube_trends() -> list[dict[str, Any]]:
+async def fetch_youtube_trends(geo_code: str | None = None) -> list[dict[str, Any]]:
     settings = get_settings()
     if not settings.youtube_api_key:
         raise RuntimeError("youtube_api_key_missing")
+    target = resolve_geo_target(geo_code)
 
     def _call() -> list[dict[str, Any]]:
         url = "https://www.googleapis.com/youtube/v3/videos"
@@ -58,7 +60,7 @@ async def fetch_youtube_trends() -> list[dict[str, Any]]:
             "part": "snippet,statistics",
             "chart": "mostPopular",
             "maxResults": 25,
-            "regionCode": "US",
+            "regionCode": target.youtube_region,
             "key": settings.youtube_api_key,
         }
         response = requests.get(
@@ -90,14 +92,17 @@ async def fetch_youtube_trends() -> list[dict[str, Any]]:
                     "title": snippet.get("title", "Untitled YouTube Trend"),
                     "platform": "youtube",
                     "timestamp": now,
-                    "metadata": {
-                        "views": int(stats.get("viewCount", 0)),
-                        "likes": int(stats.get("likeCount", 0)),
-                        "channel": snippet.get("channelTitle"),
-                        "video_id": video_id,
-                        "thumbnail_url": best_thumbnail,
-                        "source_url": f"https://www.youtube.com/watch?v={video_id}" if video_id else None,
-                    },
+                    "metadata": attach_geo_metadata(
+                        {
+                            "views": int(stats.get("viewCount", 0)),
+                            "likes": int(stats.get("likeCount", 0)),
+                            "channel": snippet.get("channelTitle"),
+                            "video_id": video_id,
+                            "thumbnail_url": best_thumbnail,
+                            "source_url": f"https://www.youtube.com/watch?v={video_id}" if video_id else None,
+                        },
+                        target.code,
+                    ),
                 }
             )
         logger.info(

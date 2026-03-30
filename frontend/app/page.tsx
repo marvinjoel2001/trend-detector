@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 
 import { AppShell } from "../components/app-shell";
+import { LoadingSkeleton } from "../components/loading-skeleton";
 import { TrendCard } from "../components/trend-card";
 import { api } from "../lib/api";
 import { useI18n } from "../lib/i18n";
-import { buildPromptGeneratorConfig, loadPromptEngineSettings } from "../lib/prompt-engine-settings";
+import { buildGeoQuery, buildPromptGeneratorConfig, getTrendRegionOption, loadPromptEngineSettings } from "../lib/prompt-engine-settings";
 import { getTrendMedia } from "../lib/trend-media";
 import { PromptResult, SourceStatusResponse, Trend } from "../lib/types";
 
@@ -37,11 +38,12 @@ export default function DashboardPage() {
   const [toasts, setToasts] = useState<
     Array<{ id: string; type: "warn" | "error"; text: string }>
   >([]);
+  const region = getTrendRegionOption(loadPromptEngineSettings().trendRegionCode);
 
   useEffect(() => {
     async function loadDashboard() {
       try {
-        const data = await api.getTrendsWithStatus("?limit=50");
+        const data = await api.getTrendsWithStatus(buildGeoQuery({ limit: 50 }));
         const sortedItems = [...data.items].sort((a, b) => {
           const rankDiff = b.rank_score - a.rank_score;
           if (rankDiff !== 0) return rankDiff;
@@ -54,6 +56,7 @@ export default function DashboardPage() {
         const alerts = Object.values(data.source_status || {})
           .filter((s) =>
             [
+              "approximate",
               "unavailable",
               "fallback",
               "cached",
@@ -89,7 +92,7 @@ export default function DashboardPage() {
       setLoading(true);
       setError(null);
       api
-        .getTrendsWithStatus("?limit=50")
+        .getTrendsWithStatus(buildGeoQuery({ limit: 50 }))
         .then((data) => {
           const sortedItems = [...data.items].sort((a, b) => {
             const rankDiff = b.rank_score - a.rank_score;
@@ -172,6 +175,7 @@ export default function DashboardPage() {
 
   const selectedTrend =
     trends.find((trend) => trend.id === selectedTrendId) || null;
+  const showDashboardSkeleton = loading && !trends.length;
 
   return (
     <AppShell>
@@ -196,6 +200,9 @@ export default function DashboardPage() {
           </h2>
           <p className="mt-1 text-sm text-slate-300">{t("dashboardSub")}</p>
         </div>
+        <div className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-cyan-100">
+          Region: {region.label}
+        </div>
       </div>
       <div className="mb-4 flex flex-wrap gap-2">
         {Object.values(sourceStatus).map((status) => (
@@ -213,9 +220,7 @@ export default function DashboardPage() {
           </span>
         ))}
       </div>
-      {loading ? (
-        <div className="text-sm text-slate-300">{t("loadingTrends")}</div>
-      ) : null}
+      {loading ? <div className="text-sm text-slate-300">{t("loadingTrends")}</div> : null}
       {error ? (
         <div className="mb-6 rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">
           {error}
@@ -225,7 +230,39 @@ export default function DashboardPage() {
         <div className="text-sm text-slate-400">{t("noTrends")}</div>
       ) : null}
 
-      <div className="columns-1 gap-5 sm:columns-2 xl:columns-3">
+      {showDashboardSkeleton ? (
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <article
+              key={`dashboard-skeleton-${index}`}
+              className="glass-panel overflow-hidden rounded-2xl border border-white/5 p-4"
+            >
+              <div className="mb-4 flex items-start justify-between">
+                <div className="space-y-3">
+                  <LoadingSkeleton className="h-6 w-20 rounded-full" />
+                  <LoadingSkeleton className="h-7 w-48" />
+                  <LoadingSkeleton className="h-4 w-32" />
+                </div>
+                <LoadingSkeleton className="h-9 w-16 rounded-xl" />
+              </div>
+              <LoadingSkeleton className="mb-4 aspect-[16/10] w-full rounded-xl" />
+              <div className="mb-5 flex items-center justify-between">
+                <LoadingSkeleton className="h-4 w-24" />
+                <LoadingSkeleton className="h-5 w-20" />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <LoadingSkeleton className="h-4 w-28" />
+                <div className="flex gap-2">
+                  <LoadingSkeleton className="h-9 w-24 rounded-full" />
+                  <LoadingSkeleton className="h-9 w-24 rounded-full" />
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : null}
+
+      <div className={`${showDashboardSkeleton ? "hidden" : "columns-1 gap-5 sm:columns-2 xl:columns-3"}`}>
         {trends.map((trend) => (
           <TrendCard
             key={trend.id}

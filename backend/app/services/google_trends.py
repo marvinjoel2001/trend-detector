@@ -8,6 +8,7 @@ from xml.etree import ElementTree
 
 import requests
 from app.core.config import get_settings
+from app.services.geo_targets import attach_geo_metadata, resolve_geo_target
 from app.services.user_agents import get_next_user_agent, get_proxy_config
 
 logger = logging.getLogger(__name__)
@@ -15,20 +16,24 @@ _pytrends_client: Any | None = None
 _cooldown_until_ts = 0.0
 
 
-def _fallback_google_trends(now_iso: str) -> list[dict[str, Any]]:
+def _fallback_google_trends(now_iso: str, geo_code: str | None = None) -> list[dict[str, Any]]:
+    target = resolve_geo_target(geo_code)
     fallback_queries = ["AI tools", "Crypto market", "Tech layoffs", "Gaming news", "Study hacks"]
     return [
         {
-            "id": f"gtr-fallback-{idx}-{query.lower().replace(' ', '-')}",
+            "id": f"gtr-fallback-{target.code.lower()}-{idx}-{query.lower().replace(' ', '-')}",
             "title": query,
             "platform": "google",
             "timestamp": now_iso,
-            "metadata": {
+            "metadata": attach_geo_metadata(
+                {
                 "views": max(12000 - idx * 800, 3000),
                 "likes": max(700 - idx * 35, 80),
                 "fallback": True,
                 "source_url": f"https://trends.google.com/trends/explore?q={query.replace(' ', '%20')}",
-            },
+                },
+                target.code,
+            ),
         }
         for idx, query in enumerate(fallback_queries, 1)
     ]
@@ -49,9 +54,10 @@ def _get_pytrends_client() -> Any:
     return _pytrends_client
 
 
-async def fetch_google_trends() -> list[dict[str, Any]]:
+async def fetch_google_trends(geo_code: str | None = None) -> list[dict[str, Any]]:
     settings = get_settings()
     now = datetime.now(timezone.utc)
+    target = resolve_geo_target(geo_code)
 
     def _call() -> list[dict[str, Any]]:
         global _cooldown_until_ts  # noqa: PLW0603
@@ -62,9 +68,12 @@ async def fetch_google_trends() -> list[dict[str, Any]]:
         sleep_before = random.uniform(1.0, 3.5)
         time.sleep(sleep_before)
 
+        if not target.pytrends_pn:
+            raise RuntimeError("google_trends_pytrends_region_unsupported")
+
         pytrends = _get_pytrends_client()
         try:
-            trending_df = pytrends.trending_searches(pn="united_states")
+            trending_df = pytrends.trending_searches(pn=target.pytrends_pn)
         except Exception as exc:  # noqa: BLE001
             message = str(exc).lower()
             blocked = any(token in message for token in ["429", "blocked", "captcha", "too many"])
@@ -83,11 +92,14 @@ async def fetch_google_trends() -> list[dict[str, Any]]:
                     "title": query,
                     "platform": "google",
                     "timestamp": now.isoformat(),
-                    "metadata": {"views": max(10000 - i * 250, 1000), "likes": max(500 - i * 10, 10)},
+                    "metadata": attach_geo_metadata(
+                        {"views": max(10000 - i * 250, 1000), "likes": max(500 - i * 10, 10)},
+                        target.code,
+                    ),
                 }
             )
             items[-1]["metadata"]["source_url"] = (
-                f"https://trends.google.com/trends/explore?q={query.replace(' ', '%20')}"
+                f"https://trends.google.com/trends/explore?geo={target.google_geo}&q={query.replace(' ', '%20')}"
             )
 
         logger.info(
@@ -104,7 +116,7 @@ async def fetch_google_trends() -> list[dict[str, Any]]:
     def _call_rss_backup() -> list[dict[str, Any]]:
         started = time.perf_counter()
         response = requests.get(
-            "https://trends.google.com/trending/rss?geo=US",
+            f"https://trends.google.com/trending/rss?geo={target.google_geo}",
             timeout=20,
             headers={"User-Agent": get_next_user_agent()},
             proxies=get_proxy_config(),
@@ -122,11 +134,14 @@ async def fetch_google_trends() -> list[dict[str, Any]]:
                     "title": title,
                     "platform": "google",
                     "timestamp": now.isoformat(),
-                    "metadata": {"views": max(10000 - idx * 250, 1000), "likes": max(500 - idx * 10, 10)},
+                    "metadata": attach_geo_metadata(
+                        {"views": max(10000 - idx * 250, 1000), "likes": max(500 - idx * 10, 10)},
+                        target.code,
+                    ),
                 }
             )
             items[-1]["metadata"]["source_url"] = (
-                f"https://trends.google.com/trends/explore?q={title.replace(' ', '%20')}"
+                f"https://trends.google.com/trends/explore?geo={target.google_geo}&q={title.replace(' ', '%20')}"
             )
 
         if not items:
@@ -157,4 +172,4 @@ async def fetch_google_trends() -> list[dict[str, Any]]:
                 "source_provider_backup_failed_using_fallback",
                 extra={"source": "google", "response_status": "backup_failed", "error": str(backup_exc)},
             )
-            return _fallback_google_trends(now.isoformat())
+            return _fallback_google_trends(now.isoformat(), geo_code=target.code)

@@ -7,6 +7,7 @@ from typing import Any
 from urllib.parse import quote, urljoin
 
 from app.core.config import get_settings
+from app.services.geo_targets import attach_geo_metadata, resolve_geo_target
 from app.services.user_agents import get_next_user_agent, get_proxy_config
 
 logger = logging.getLogger(__name__)
@@ -33,9 +34,12 @@ def _extract_first_hashtag(text: str) -> str:
     return _sanitize_hashtag(match.group(1))
 
 
-async def fetch_tiktok_trends() -> list[dict[str, Any]]:
+async def fetch_tiktok_trends(geo_code: str | None = None) -> list[dict[str, Any]]:
     settings = get_settings()
     now = datetime.now(timezone.utc).isoformat()
+    target = resolve_geo_target(geo_code)
+    language_hint = target.accept_language.split(",")[0].split("-")[0] or "en"
+    precise_geo = False
 
     try:
         from playwright.async_api import async_playwright
@@ -54,10 +58,12 @@ async def fetch_tiktok_trends() -> list[dict[str, Any]]:
                     "width": random.randint(1180, 1600),
                     "height": random.randint(700, 1024),
                 },
+                locale=language_hint,
             )
             await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined});")
+            await page.set_extra_http_headers({"Accept-Language": target.accept_language})
             await page.wait_for_timeout(random.randint(1200, 3200))
-            await page.goto(settings.tiktok_search_url, wait_until="domcontentloaded", timeout=30000)
+            await page.goto(f"{settings.tiktok_search_url}?lang={language_hint}", wait_until="domcontentloaded", timeout=30000)
             await page.wait_for_timeout(random.randint(1500, 4000))
 
             video_cards = await page.eval_on_selector_all(
@@ -124,13 +130,17 @@ async def fetch_tiktok_trends() -> list[dict[str, Any]]:
                     "title": title,
                     "platform": "tiktok",
                     "timestamp": now,
-                    "metadata": {
-                        "views": max(1100000 - idx * 60000, 20000),
-                        "likes": max(56000 - idx * 2000, 1000),
-                        "hashtag": hashtag,
-                        "source_url": source_url,
-                        "thumbnail_url": thumbnail_url,
-                    },
+                    "metadata": attach_geo_metadata(
+                        {
+                            "views": max(1100000 - idx * 60000, 20000),
+                            "likes": max(56000 - idx * 2000, 1000),
+                            "hashtag": hashtag,
+                            "source_url": source_url,
+                            "thumbnail_url": thumbnail_url,
+                        },
+                        target.code,
+                        precise=precise_geo,
+                    ),
                 }
             )
 
@@ -151,13 +161,17 @@ async def fetch_tiktok_trends() -> list[dict[str, Any]]:
                         "title": f"{tag} trend",
                         "platform": "tiktok",
                         "timestamp": now,
-                        "metadata": {
-                            "views": max(900000 - idx * 55000, 20000),
-                            "likes": max(50000 - idx * 1800, 1000),
-                            "hashtag": tag,
-                            "source_url": source_url,
-                            "thumbnail_url": tag_entry.get("thumbnail") or None,
-                        },
+                        "metadata": attach_geo_metadata(
+                            {
+                                "views": max(900000 - idx * 55000, 20000),
+                                "likes": max(50000 - idx * 1800, 1000),
+                                "hashtag": tag,
+                                "source_url": source_url,
+                                "thumbnail_url": tag_entry.get("thumbnail") or None,
+                            },
+                            target.code,
+                            precise=precise_geo,
+                        ),
                     }
                 )
 

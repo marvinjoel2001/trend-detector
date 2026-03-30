@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AppShell } from "../../../components/app-shell";
+import { LoadingSkeleton } from "../../../components/loading-skeleton";
 import { SimpleLineChart } from "../../../components/simple-line-chart";
 import { api } from "../../../lib/api";
 import { useI18n } from "../../../lib/i18n";
@@ -19,6 +20,7 @@ export default function TrendDetailPage() {
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [forecastLoading, setForecastLoading] = useState(false);
   const [forecastError, setForecastError] = useState<string | null>(null);
   const [previewGallery, setPreviewGallery] = useState<TrendPreviewGalleryItem[]>([]);
   const [previewGalleryLoading, setPreviewGalleryLoading] = useState(false);
@@ -31,6 +33,7 @@ export default function TrendDetailPage() {
     async function loadData() {
       setLoading(true);
       setError(null);
+      setForecastLoading(false);
       setForecastError(null);
       setForecast(null);
       setPreviewGallery([]);
@@ -45,15 +48,20 @@ export default function TrendDetailPage() {
 
         try {
           const platform = trendData.trend.platform.toLowerCase();
+          const geoCode =
+            typeof trendData.trend.metadata?.geo_code === "string" && trendData.trend.metadata.geo_code.trim()
+              ? trendData.trend.metadata.geo_code.trim().toUpperCase()
+              : "US";
+          const geoQuery = `?geo=${encodeURIComponent(geoCode)}`;
           let sourceItems: Trend[] = [];
           if (platform === "youtube") {
-            sourceItems = await api.getYoutubeResults();
+            sourceItems = await api.getYoutubeResults(geoQuery);
           } else if (platform === "tiktok") {
-            sourceItems = await api.getTiktokResults();
+            sourceItems = await api.getTiktokResults(geoQuery);
           } else if (platform === "reddit") {
-            sourceItems = await api.getRedditResults();
+            sourceItems = await api.getRedditResults(geoQuery);
           } else if (platform === "google") {
-            sourceItems = await api.getGoogleResults();
+            sourceItems = await api.getGoogleResults(geoQuery);
           }
           if (!active) return;
           setPreviewGallery(buildTrendPreviewGallery(trendData.trend as Trend, sourceItems, 12));
@@ -75,12 +83,17 @@ export default function TrendDetailPage() {
       setLoading(false);
 
       try {
+        setForecastLoading(true);
         const forecastData = await api.getForecast(id);
         if (!active) return;
         setForecast(forecastData);
       } catch (err) {
         if (!active) return;
         setForecastError(err instanceof Error ? err.message : "Failed loading forecast");
+      } finally {
+        if (active) {
+          setForecastLoading(false);
+        }
       }
     }
 
@@ -95,6 +108,33 @@ export default function TrendDetailPage() {
       {loading ? <div className="text-sm text-slate-300">{t("loadingTrendDetail")}</div> : null}
       {error ? <div className="rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</div> : null}
       {!loading && !detail ? <div className="text-sm text-slate-400">{t("trendNotFound")}</div> : null}
+      {loading && !detail ? (
+        <div className="space-y-6">
+          <section className="glass-panel overflow-hidden rounded-2xl border border-white/10 p-6">
+            <LoadingSkeleton className="aspect-[16/9] w-full rounded-xl" />
+          </section>
+          <section className="glass-panel rounded-2xl border border-white/10 p-6">
+            <LoadingSkeleton className="h-8 w-3/4" />
+            <LoadingSkeleton className="mt-3 h-4 w-1/3" />
+          </section>
+          <section className="glass-panel rounded-2xl border border-white/10 p-6">
+            <LoadingSkeleton className="h-6 w-40" />
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <LoadingSkeleton key={`detail-gallery-skeleton-${index}`} className="aspect-[4/5] w-full" />
+              ))}
+            </div>
+          </section>
+          <section className="glass-panel rounded-2xl border border-white/10 p-6">
+            <LoadingSkeleton className="h-6 w-52" />
+            <LoadingSkeleton className="mt-4 h-56 w-full" />
+          </section>
+          <section className="glass-panel rounded-2xl border border-white/10 p-6">
+            <LoadingSkeleton className="h-6 w-40" />
+            <LoadingSkeleton className="mt-4 h-48 w-full" />
+          </section>
+        </div>
+      ) : null}
       {detail ? (
         <div className="space-y-6">
           {(() => {
@@ -161,6 +201,13 @@ export default function TrendDetailPage() {
             {!previewGalleryLoading && !previewGallery.length ? (
               <p className="mt-3 text-sm text-slate-400">{t("noPreviewGalleryItems")}</p>
             ) : null}
+            {previewGalleryLoading ? (
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <LoadingSkeleton key={`preview-gallery-skeleton-${index}`} className="aspect-[4/5] w-full" />
+                ))}
+              </div>
+            ) : null}
 
             {previewGallery.length ? (
               <div className="mt-4 columns-1 gap-4 sm:columns-2 lg:columns-3">
@@ -210,16 +257,16 @@ export default function TrendDetailPage() {
           </section>
           <section className="glass-panel rounded-2xl border border-white/10 p-6">
             <h3 className="font-headline text-lg font-bold">{t("sixHourForecast")}</h3>
-            {forecastError ? (
-              <p className="mt-2 text-sm text-amber-300">{forecastError}</p>
-            ) : null}
-            {!forecast || !forecast.points.length ? (
+            {forecastLoading ? <LoadingSkeleton className="mt-3 h-48 w-full" /> : null}
+            {forecastError ? <p className="mt-2 text-sm text-amber-300">{forecastError}</p> : null}
+            {!forecastLoading && !forecastError && (!forecast || !forecast.points.length) ? (
               <p className="mt-2 text-sm text-slate-400">{t("noForecast")}</p>
-            ) : (
+            ) : null}
+            {!forecastLoading && forecast && forecast.points.length ? (
               <div className="mt-3">
                 <SimpleLineChart values={forecast.points.map((p) => p.momentum)} emptyLabel={t("noForecast")} />
               </div>
-            )}
+            ) : null}
           </section>
         </div>
       ) : null}

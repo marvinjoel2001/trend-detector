@@ -78,3 +78,33 @@ class PromptEngineConfigOut(BaseModel):
     provider: Literal["gemini"] = "gemini"
     default_model: str
     api_key_configured: bool
+
+
+class MediaPromptInputOut(BaseModel):
+    source_type: str
+    name: str
+    mime_type: str | None = None
+    origin: str
+    size_bytes: int | None = None
+    source_url: str | None = None
+
+
+class MediaPromptPayloadOut(BaseModel):
+    summary: str
+    hook: str
+    subject: str
+    motion: str
+    camera: str
+    visual_style: str
+    aspect_ratio: str
+    hashtags: list[str] = Field(default_factory=list)
+    scene_beats: list[str] = Field(default_factory=list)
+    clone_notes: list[str] = Field(default_factory=list)
+    safety_notes: list[str] = Field(default_factory=list)
+
+
+class MediaPromptGenerateOut(BaseModel):
+    prompt_text: str
+    generated_with: str
+    payload: MediaPromptPayloadOut
+    analyzed_inputs: list[MediaPromptInputOut] = Field(default_factory=list)
