@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AppShell } from "../../components/app-shell";
 import { LoadingSkeleton } from "../../components/loading-skeleton";
@@ -114,9 +114,9 @@ export default function PromptFeedPage() {
   const copy =
     language === "es"
       ? {
-          title: "Prompt Feed",
-          subtitle: "Feed visual infinito con imagenes, videos y prompts base tomados de datasets creativos y fuentes sociales.",
-          feedTitle: "Feed infinito",
+          title: "Galería de Prompts",
+          subtitle: "Galería visual con imágenes, videos y prompts base tomados de colecciones creativas y fuentes sociales.",
+          feedTitle: "Galería infinita",
           feedSub:
             "Aqui mezclamos lo que encontremos en PromptHero, Krea, Civitai, GitHub, YouTube, Reddit y TikTok. Cuando una fuente social no trae prompt original, generamos un prompt de referencia util basado en el contenido visible.",
           source: "Fuente",
@@ -134,9 +134,9 @@ export default function PromptFeedPage() {
           repo: "Repo",
           branch: "Rama",
           path: "Ruta",
-          refreshButton: "Recargar feed",
+          refreshButton: "Actualizar galería",
           loadMore: "Cargar mas",
-          loading: "Cargando feed visual...",
+          loading: "Cargando galería visual...",
           loadingMore: "Trayendo mas referencias...",
           noItems: "No encontramos referencias en las fuentes activas.",
           copyPrompt: "Copiar prompt",
@@ -157,7 +157,7 @@ export default function PromptFeedPage() {
           feedHint: "El feed prioriza tarjetas con media real. Si una URL no responde al chequeo, igual intentamos mandarla al frontend para no perder previews validos.",
           video: "Video",
           loadedCount: "Referencias cargadas",
-          endReached: "Llegaste al final del feed disponible para esta fuente.",
+          endReached: "Llegaste al final de la galería disponible para esta fuente.",
         }
       : {
           title: "Prompt Feed",
@@ -206,55 +206,61 @@ export default function PromptFeedPage() {
           endReached: "You reached the end of the currently available feed for this source.",
         };
 
-  async function loadFeed(options?: {
-    reset?: boolean;
-    sourceOverride?: string;
-    githubOverride?: { owner: string; repo: string; branch: string; path: string };
-  }) {
-    const reset = options?.reset ?? false;
-    const activeSource = options?.sourceOverride ?? source;
-    const activeGithub = options?.githubOverride ?? {
-      owner: githubOwner,
-      repo: githubRepo,
-      branch: githubBranch,
-      path: githubPath,
-    };
+  const fallbackFeedError =
+    language === "es" ? "No se pudo cargar la galería de prompts." : "Failed loading prompt feed";
 
-    if (reset) {
-      setLoading(true);
-      setError(null);
-      setItems([]);
-      setHasMore(true);
-      setNextOffset(0);
-    } else {
-      if (loading || loadingMore || !hasMore) return;
-      setLoadingMore(true);
-    }
+  const loadFeed = useCallback(
+    async (options?: {
+      reset?: boolean;
+      sourceOverride?: string;
+      githubOverride?: { owner: string; repo: string; branch: string; path: string };
+    }) => {
+      const reset = options?.reset ?? false;
+      const activeSource = options?.sourceOverride ?? source;
+      const activeGithub = options?.githubOverride ?? {
+        owner: githubOwner,
+        repo: githubRepo,
+        branch: githubBranch,
+        path: githubPath,
+      };
 
-    try {
-      const requestedOffset = reset ? 0 : nextOffset;
-      const data = await api.getPromptFeed({
-        source: activeSource,
-        limit: PAGE_SIZE,
-        offset: requestedOffset,
-        github_owner: activeGithub.owner,
-        github_repo: activeGithub.repo,
-        github_branch: activeGithub.branch,
-        github_path: activeGithub.path,
-      });
+      if (reset) {
+        setLoading(true);
+        setError(null);
+        setItems([]);
+        setHasMore(true);
+        setNextOffset(0);
+      } else {
+        if (loading || loadingMore || !hasMore) return;
+        setLoadingMore(true);
+      }
 
-      setResult(data);
-      const inferredHasMore = data.has_more || data.items.length >= PAGE_SIZE;
-      setHasMore(inferredHasMore);
-      setNextOffset(data.next_offset ?? (requestedOffset + data.items.length));
-      setItems((current) => (reset ? data.items : mergePromptFeedItems(current, data.items)));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed loading prompt feed");
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }
+      try {
+        const requestedOffset = reset ? 0 : nextOffset;
+        const data = await api.getPromptFeed({
+          source: activeSource,
+          limit: PAGE_SIZE,
+          offset: requestedOffset,
+          github_owner: activeGithub.owner,
+          github_repo: activeGithub.repo,
+          github_branch: activeGithub.branch,
+          github_path: activeGithub.path,
+        });
+
+        setResult(data);
+        const inferredHasMore = data.has_more || data.items.length >= PAGE_SIZE;
+        setHasMore(inferredHasMore);
+        setNextOffset(data.next_offset ?? (requestedOffset + data.items.length));
+        setItems((current) => (reset ? data.items : mergePromptFeedItems(current, data.items)));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : fallbackFeedError);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [fallbackFeedError, githubBranch, githubOwner, githubPath, githubRepo, hasMore, loading, loadingMore, nextOffset, source]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -277,14 +283,32 @@ export default function PromptFeedPage() {
         setGithubBranch(githubDefaults.branch);
         setGithubPath(githubDefaults.path);
 
-        await loadFeed({
-          reset: true,
-          sourceOverride: "all",
-          githubOverride: githubDefaults,
+        setLoading(true);
+        setError(null);
+        setItems([]);
+        setHasMore(true);
+        setNextOffset(0);
+
+        const feedData = await api.getPromptFeed({
+          source: "all",
+          limit: PAGE_SIZE,
+          offset: 0,
+          github_owner: githubDefaults.owner,
+          github_repo: githubDefaults.repo,
+          github_branch: githubDefaults.branch,
+          github_path: githubDefaults.path,
         });
+
+        if (cancelled) return;
+
+        setResult(feedData);
+        const inferredHasMore = feedData.has_more || feedData.items.length >= PAGE_SIZE;
+        setHasMore(inferredHasMore);
+        setNextOffset(feedData.next_offset ?? feedData.items.length);
+        setItems(feedData.items);
       } catch (err) {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : "Failed loading prompt feed");
+        setError(err instanceof Error ? err.message : fallbackFeedError);
         setLoading(false);
       }
     }
@@ -294,7 +318,7 @@ export default function PromptFeedPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [fallbackFeedError]);
 
   useEffect(() => {
     const node = loadMoreRef.current;
@@ -310,25 +334,16 @@ export default function PromptFeedPage() {
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [hasMore, items.length, loading, loadingMore, nextOffset, source, githubOwner, githubRepo, githubBranch, githubPath]);
+  }, [hasMore, items.length, loadFeed, loading, loadingMore]);
 
   useEffect(() => {
     if (loading || loadingMore || error || items.length || emptyRetryRef.current) return;
     emptyRetryRef.current = true;
     const timer = window.setTimeout(() => {
-      void loadFeed({
-        reset: true,
-        sourceOverride: source,
-        githubOverride: {
-          owner: githubOwner,
-          repo: githubRepo,
-          branch: githubBranch,
-          path: githubPath,
-        },
-      });
+      void loadFeed({ reset: true });
     }, 1800);
     return () => window.clearTimeout(timer);
-  }, [error, githubBranch, githubOwner, githubPath, githubRepo, items.length, loading, loadingMore, source]);
+  }, [error, items.length, loadFeed, loading, loadingMore]);
 
   async function copyPrompt(item: PromptFeedItem) {
     const prompt = item.prompt?.trim();
@@ -440,18 +455,7 @@ export default function PromptFeedPage() {
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <button
               className="btn-gradient rounded-full px-5 py-2.5 text-sm font-bold text-slate-950"
-              onClick={() =>
-                void loadFeed({
-                  reset: true,
-                  sourceOverride: source,
-                  githubOverride: {
-                    owner: githubOwner,
-                    repo: githubRepo,
-                    branch: githubBranch,
-                    path: githubPath,
-                  },
-                })
-              }
+              onClick={() => void loadFeed({ reset: true })}
             >
               {copy.refreshButton}
             </button>

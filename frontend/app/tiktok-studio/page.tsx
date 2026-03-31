@@ -46,11 +46,11 @@ export default function TikTokStudioPage() {
   const copy =
     language === "es"
       ? {
-          title: "TikTok Studio",
+          title: "Estudio TikTok",
           subtitle:
             "Sube videos, imágenes o una URL y conviértelos en un prompt listo para clonar la mecánica viral, la cámara, el ritmo y la estructura visual en un modelo de video AI.",
           uploadTitle: "Fuente de referencia",
-          uploadSub: "Puedes mezclar archivos locales y una URL. Si la URL tiene preview o video, el backend intenta extraerlo para el análisis.",
+          uploadSub: "Puedes mezclar archivos locales y una URL. Si la URL tiene vista previa o video, la app intentará extraerlo para analizarlo.",
           url: "URL del video / post",
           niche: "Nicho o enfoque",
           notes: "Indicaciones creativas",
@@ -136,7 +136,7 @@ export default function TikTokStudioPage() {
       const response = await api.analyzeVideoPrompt(form);
       setResult(response);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed generating prompt");
+      setError(err instanceof Error ? err.message : language === "es" ? "No se pudo generar el prompt." : "Failed generating prompt");
     } finally {
       setLoading(false);
     }

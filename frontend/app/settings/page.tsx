@@ -93,10 +93,10 @@ function translateSourceStatus(status: string, language: "es" | "en"): string {
   if (language === "es") {
     if (normalized === "real") return "Real";
     if (normalized === "approximate") return "Aproximado";
-    if (normalized === "fallback") return "Fallback";
-    if (normalized === "cached") return "Cache";
+    if (normalized === "fallback") return "Respaldo temporal";
+    if (normalized === "cached") return "En caché";
     if (normalized === "locked") return "Bloqueado";
-    if (normalized === "locked_cached") return "Bloqueado con cache";
+    if (normalized === "locked_cached") return "Bloqueado con caché";
     if (normalized === "unavailable") return "No disponible";
     return "Pendiente";
   }
@@ -126,7 +126,7 @@ function getSourceStatusDetail(
   }
   return {
     status: "unknown",
-    message: language === "es" ? "Aun sin lectura para esta zona." : "No reading yet for this territory.",
+    message: language === "es" ? "Aún sin lectura para esta zona." : "No reading yet for this territory.",
     items_count: 0,
   };
 }
@@ -271,43 +271,43 @@ export default function SettingsPage() {
   const copy =
     locale === "es"
       ? {
-          title: "Configuracion",
+          title: "Configuración",
           subtitle:
-            "Aqui controlas dos cosas clave: con que modelo generar prompts y desde que zona quieres leer lo viral. La zona ahora se elige con un selector visual para que sea mas claro cuando quieres Bolivia, Sudamerica o un mercado puntual.",
+            "Aquí controlas dos cosas clave: con qué modelo generar prompts y desde qué zona quieres leer lo viral. La zona ahora se elige con un selector visual para que sea más claro cuando quieres Bolivia, Sudamérica o un mercado puntual.",
           promptTitle: "Motor general de prompts",
-          promptSubtitle: "Configura el generador que usan el dashboard, forecast y el generador clasico.",
-          systemMode: "Usar configuracion del backend",
+          promptSubtitle: "Configura el generador que usan el panel principal, el pronóstico y el generador clásico.",
+          systemMode: "Usar configuración automática",
           customMode: "Usar Gemini personalizado",
           apiKey: "API key de Gemini",
-          apiKeyHint: "Si la dejas vacia, se usa la key del backend y solo cambias el modelo.",
+          apiKeyHint: "Si la dejas vacía, se usa la clave configurada en el sistema y solo cambias el modelo.",
           model: "Modelo de Gemini",
           modelHint: "Para prompts generales puedes dejar el modelo actual del sistema o probar otro.",
-          videoTitle: "Analisis y prompts de video",
+          videoTitle: "Análisis y prompts de video",
           videoSubtitle:
-            "Este bloque alimenta TikTok Studio. Por defecto queda listo para analizar videos, imagenes y URLs largas con Gemini 3.1 Pro Preview.",
+            "Esta sección alimenta el Estudio TikTok. Por defecto queda lista para analizar videos, imágenes y URLs largas con Gemini 3.1 Pro Preview.",
           inheritMode: "Heredar motor general",
           dedicatedMode: "Usar Gemini dedicado para video",
           regionTitle: "Zona de tendencias virales",
           regionSubtitle:
-            "La app consulta por pais cuando la fuente lo permite y te marca cuando una fuente solo puede trabajar como aproximacion regional.",
+            "La app consulta por país cuando la fuente lo permite y te marca cuando una fuente solo puede trabajar como aproximación regional.",
           mapTitle: "Mapa mundial de zonas",
-          mapSubtitle: "El mapa muestra los mercados disponibles y te deja saltar directo al pais que quieres analizar.",
+          mapSubtitle: "El mapa muestra los mercados disponibles y te deja saltar directo al país que quieres analizar.",
           openList: "Abrir lista completa",
           closeList: "Cerrar lista",
           allRegions: "Todas las zonas",
-          allRegionsSubtitle: "Buscador rapido y listado agrupado por continente.",
+          allRegionsSubtitle: "Buscador rápido y listado agrupado por continente.",
           searchPlaceholder: "Buscar Bolivia, Brasil, Peru...",
           selectedZone: "Zona seleccionada",
-          selectedZoneSubtitle: "Esta es la referencia que usaran dashboard, live trends, forecast y el generador de prompts.",
-          sourcePrecision: "Precision por fuente",
-          sourcePrecisionSubtitle: "Investigado para no mezclar pais exacto con ranking global.",
-          liveStatusTitle: "Estado actual del backend",
+          selectedZoneSubtitle: "Esta es la referencia que usarán panel principal, tendencias en vivo, pronóstico y el generador de prompts.",
+          sourcePrecision: "Precisión por fuente",
+          sourcePrecisionSubtitle: "Revisado para no mezclar país exacto con ranking global.",
+          liveStatusTitle: "Estado actual de las fuentes",
           liveStatusSubtitle: "Lectura mas reciente de las fuentes para esta zona.",
           statusLoading: "Consultando estado real de las fuentes...",
           localNotice:
-            "Todo esto se guarda en este navegador. Al cambiar la zona, las pantallas vuelven a pedir tendencias con ese pais.",
-          systemCard: "Estado del backend",
-          backendKey: "API key del backend",
+            "Todo esto se guarda en este navegador. Al cambiar la zona, las pantallas vuelven a pedir tendencias con ese país.",
+          systemCard: "Estado del sistema",
+          backendKey: "Clave API del sistema",
           configured: "Configurada",
           missing: "No configurada",
           defaultModel: "Modelo por defecto",
@@ -319,8 +319,8 @@ export default function SettingsPage() {
           status: "Estado",
           reset: "Restablecer",
           save: "Guardar cambios",
-          saved: "Configuracion guardada.",
-          resetDone: "Configuracion restablecida.",
+          saved: "Configuración guardada.",
+          resetDone: "Configuración restablecida.",
         }
       : {
           title: "Settings",
@@ -328,10 +328,10 @@ export default function SettingsPage() {
             "This is where you control two core things: which model generates prompts and which territory should drive viral discovery. The territory picker is now visual so it is clearer when you want Bolivia, South America, or another specific market.",
           promptTitle: "General prompt engine",
           promptSubtitle: "Configure the generator used by the dashboard, forecast, and the classic prompt generator.",
-          systemMode: "Use backend configuration",
+          systemMode: "Use automatic configuration",
           customMode: "Use custom Gemini",
           apiKey: "Gemini API key",
-          apiKeyHint: "If empty, the backend key is used and only the model changes.",
+          apiKeyHint: "If empty, the system key is used and only the model changes.",
           model: "Gemini model",
           modelHint: "For general prompts, you can keep the system model or test another one.",
           videoTitle: "Video analysis and prompt generation",
@@ -353,12 +353,12 @@ export default function SettingsPage() {
           selectedZoneSubtitle: "This is the reference used by dashboard, live trends, forecast, and prompt generation.",
           sourcePrecision: "Source precision",
           sourcePrecisionSubtitle: "Investigated so exact country signals are not mixed with global ranking noise.",
-          liveStatusTitle: "Current backend status",
+          liveStatusTitle: "Current source status",
           liveStatusSubtitle: "Most recent source reading for this territory.",
           statusLoading: "Loading live source status...",
           localNotice: "Everything is stored in this browser. When the territory changes, trend pages request that country.",
-          systemCard: "Backend status",
-          backendKey: "Backend API key",
+          systemCard: "System status",
+          backendKey: "System API key",
           configured: "Configured",
           missing: "Not configured",
           defaultModel: "Default model",
@@ -427,7 +427,6 @@ export default function SettingsPage() {
         <div className="grid gap-6 xl:grid-cols-[1.55fr,1fr]">
           <div className="space-y-6">
             <section className="glass-panel rounded-3xl border border-white/10 p-6">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{copy.promptTitle}</p>
               <h3 className="mt-2 font-headline text-2xl font-bold text-white">{copy.promptTitle}</h3>
               <p className="mt-2 text-sm text-slate-300">{copy.promptSubtitle}</p>
 
@@ -483,7 +482,6 @@ export default function SettingsPage() {
             </section>
 
             <section className="glass-panel rounded-3xl border border-white/10 p-6">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{copy.videoTitle}</p>
               <h3 className="mt-2 font-headline text-2xl font-bold text-white">{copy.videoTitle}</h3>
               <p className="mt-2 text-sm leading-7 text-slate-300">{copy.videoSubtitle}</p>
 
@@ -533,7 +531,9 @@ export default function SettingsPage() {
                     onChange={(event) => updateSetting("videoModel", event.target.value)}
                     placeholder={DEFAULT_PROMPT_ENGINE_SETTINGS.videoModel}
                   />
-                  <span className="mt-2 block text-xs text-slate-400">Gemini 3.1 Pro Preview is the recommended default here.</span>
+                  <span className="mt-2 block text-xs text-slate-400">
+                    {locale === "es" ? "Gemini 3.1 Pro Preview es el valor recomendado para esta sección." : "Gemini 3.1 Pro Preview is the recommended default here."}
+                  </span>
                 </label>
               </div>
             </section>

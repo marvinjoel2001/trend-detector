@@ -29,7 +29,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="fixed left-0 top-0 h-screen w-64 border-r border-white/5 bg-black/45 p-6 backdrop-blur-xl">
         <div className="mb-10">
           <span className="text-gradient block font-headline text-2xl font-extrabold tracking-tight">TrendPrompt</span>
-          <span className="px-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">AI Engine</span>
+          <span className="px-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            {language === "es" ? "Panel Creativo" : "Creative Studio"}
+          </span>
         </div>
         <nav className="space-y-2">
           {links.map((item) => {
@@ -49,7 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
       </aside>
       <header className="fixed right-0 top-0 flex h-16 w-[calc(100%-16rem)] items-center justify-between border-b border-white/5 bg-black/30 px-8 backdrop-blur-md">
-        <h1 className="font-headline text-lg font-bold">TrendPrompt Engine</h1>
+        <h1 className="font-headline text-lg font-bold">TrendPrompt</h1>
         <div className="flex items-center gap-3">
           <p className="text-xs text-slate-400">{t("subtitle")}</p>
           <label className="text-xs text-slate-400">{t("language")}</label>

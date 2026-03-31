@@ -27,8 +27,38 @@ function previewScore(trend: Trend): number {
   return 0;
 }
 
+function friendlySourceName(source: string, language: "es" | "en"): string {
+  if (source === "youtube") return "YouTube";
+  if (source === "google") return language === "es" ? "Google Trends" : "Google Trends";
+  if (source === "tiktok") return "TikTok";
+  if (source === "reddit") return "Reddit";
+  return source.toUpperCase();
+}
+
+function translateStatus(status: string, language: "es" | "en"): string {
+  if (language === "es") {
+    if (status === "real") return "Con datos en vivo";
+    if (status === "approximate") return "Estimación regional";
+    if (status === "fallback") return "Respaldo temporal";
+    if (status === "cached") return "Datos en caché";
+    if (status === "locked") return "Actualización pausada";
+    if (status === "locked_cached") return "Pausada con caché";
+    if (status === "unavailable") return "No disponible";
+    return "Pendiente";
+  }
+
+  if (status === "real") return "Live data";
+  if (status === "approximate") return "Regional estimate";
+  if (status === "fallback") return "Temporary fallback";
+  if (status === "cached") return "Cached data";
+  if (status === "locked") return "Paused update";
+  if (status === "locked_cached") return "Paused with cache";
+  if (status === "unavailable") return "Unavailable";
+  return "Pending";
+}
+
 export default function DashboardPage() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const emptyRetryRef = useRef(false);
   const [trends, setTrends] = useState<Trend[]>([]);
   const [sourceStatus, setSourceStatus] = useState<SourceStatusResponse>({});
@@ -44,7 +74,7 @@ export default function DashboardPage() {
   const [generating, setGenerating] = useState(false);
   const [promptSettings, setPromptSettings] = useState<PromptEngineSettings>(() => loadPromptEngineSettings());
   const [toasts, setToasts] = useState<
-    Array<{ id: string; type: "warn" | "error"; text: string }>
+    Array<{ id: string; type: "warn" | "info"; text: string }>
   >([]);
   const region = getTrendRegionOption(promptSettings.trendRegionCode);
 
@@ -80,22 +110,22 @@ export default function DashboardPage() {
             id: `${s.source}-${s.updated_at || "na"}`,
             type:
               s.status === "unavailable"
-                ? ("error" as const)
-                : ("warn" as const),
-            text: `${s.source.toUpperCase()}: ${s.message}`,
+                ? ("warn" as const)
+                : ("info" as const),
+            text: `${friendlySourceName(s.source, language)}: ${translateStatus(s.status, language)}`,
           }));
         if (alerts.length) {
           setToasts(alerts);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed loading trends");
+        setError(err instanceof Error ? err.message : language === "es" ? "No se pudieron cargar las tendencias." : "Failed loading trends");
       } finally {
         setLoading(false);
       }
     }
 
     void loadDashboard();
-  }, [promptSettings]);
+  }, [promptSettings, language]);
 
   useEffect(() => {
     if (loading || error || trends.length || emptyRetryRef.current) return;
@@ -115,11 +145,13 @@ export default function DashboardPage() {
           setSourceStatus(data.source_status || {});
           if (sortedItems[0]) setSelectedTrendId(sortedItems[0].id);
         })
-        .catch((err) => setError(err instanceof Error ? err.message : "Failed loading trends"))
+        .catch((err) =>
+          setError(err instanceof Error ? err.message : language === "es" ? "No se pudieron cargar las tendencias." : "Failed loading trends")
+        )
         .finally(() => setLoading(false));
     }, 1800);
     return () => window.clearTimeout(timer);
-  }, [error, loading, promptSettings, trends.length]);
+  }, [error, loading, promptSettings, trends.length, language]);
 
   useEffect(() => {
     if (!toasts.length) return;
@@ -168,7 +200,7 @@ export default function DashboardPage() {
       });
       setPrompt(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed generating prompt");
+      setError(err instanceof Error ? err.message : language === "es" ? "No se pudo generar el prompt." : "Failed generating prompt");
     } finally {
       setGenerating(false);
     }
@@ -196,9 +228,9 @@ export default function DashboardPage() {
           <div
             key={toast.id}
             className={`max-w-sm rounded-xl border px-4 py-3 text-xs shadow-lg backdrop-blur ${
-              toast.type === "error"
-                ? "border-red-300/40 bg-red-500/20 text-red-100"
-                : "border-amber-300/40 bg-amber-500/20 text-amber-100"
+              toast.type === "warn"
+                ? "border-amber-300/40 bg-amber-500/20 text-amber-100"
+                : "border-cyan-300/40 bg-cyan-500/20 text-cyan-100"
             }`}
           >
             {toast.text}
@@ -213,7 +245,7 @@ export default function DashboardPage() {
           <p className="mt-1 text-sm text-slate-300">{t("dashboardSub")}</p>
         </div>
         <div className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-cyan-100">
-          Region: {region.label}
+          {language === "es" ? "Zona" : "Region"}: {region.label}
         </div>
       </div>
       <div className="mb-4 flex flex-wrap gap-2">
@@ -228,7 +260,7 @@ export default function DashboardPage() {
                   : "border-amber-300/40 bg-amber-500/15 text-amber-100"
             }`}
           >
-            {status.source}: {status.status}
+            {friendlySourceName(status.source, language)}: {translateStatus(status.status, language)}
           </span>
         ))}
       </div>
