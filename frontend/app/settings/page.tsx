@@ -275,18 +275,13 @@ export default function SettingsPage() {
           subtitle:
             "Aquí controlas dos cosas clave: con qué modelo generar prompts y desde qué zona quieres leer lo viral. La zona ahora se elige con un selector visual para que sea más claro cuando quieres Bolivia, Sudamérica o un mercado puntual.",
           promptTitle: "Motor general de prompts",
-          promptSubtitle: "Configura el generador que usan el panel principal, el pronóstico y el generador clásico.",
+          promptSubtitle: "Configura el único motor que usan el panel principal, Estudio TikTok, pronóstico y el generador clásico.",
           systemMode: "Usar configuración automática",
           customMode: "Usar Gemini personalizado",
           apiKey: "API key de Gemini",
-          apiKeyHint: "Si la dejas vacía, se usa la clave configurada en el sistema y solo cambias el modelo.",
+          apiKeyHint: "Si quieres mejor calidad, conecta tu API key. Si la dejas vacía, se usa la del sistema.",
           model: "Modelo de Gemini",
-          modelHint: "Para prompts generales puedes dejar el modelo actual del sistema o probar otro.",
-          videoTitle: "Análisis y prompts de video",
-          videoSubtitle:
-            "Esta sección alimenta el Estudio TikTok. Por defecto queda lista para analizar videos, imágenes y URLs largas con Gemini 3.1 Pro Preview.",
-          inheritMode: "Heredar motor general",
-          dedicatedMode: "Usar Gemini dedicado para video",
+          modelHint: "Recomendado: Gemini 3.1 Pro para mejores resultados en generación y análisis.",
           regionTitle: "Zona de tendencias virales",
           regionSubtitle:
             "La app consulta por país cuando la fuente lo permite y te marca cuando una fuente solo puede trabajar como aproximación regional.",
@@ -313,7 +308,7 @@ export default function SettingsPage() {
           defaultModel: "Modelo por defecto",
           provider: "Proveedor",
           activeRegion: "Zona activa",
-          activeVideoModel: "Modelo de video",
+          activeModel: "Modelo activo (toda la app)",
           regionGroup: "Bloque",
           itemsCount: "Items",
           status: "Estado",
@@ -327,18 +322,13 @@ export default function SettingsPage() {
           subtitle:
             "This is where you control two core things: which model generates prompts and which territory should drive viral discovery. The territory picker is now visual so it is clearer when you want Bolivia, South America, or another specific market.",
           promptTitle: "General prompt engine",
-          promptSubtitle: "Configure the generator used by the dashboard, forecast, and the classic prompt generator.",
+          promptSubtitle: "Configure the single generator used by dashboard, TikTok Studio, forecast, and classic prompt generation.",
           systemMode: "Use automatic configuration",
           customMode: "Use custom Gemini",
           apiKey: "Gemini API key",
-          apiKeyHint: "If empty, the system key is used and only the model changes.",
+          apiKeyHint: "For better quality, connect your API key. If empty, the system key is used.",
           model: "Gemini model",
-          modelHint: "For general prompts, you can keep the system model or test another one.",
-          videoTitle: "Video analysis and prompt generation",
-          videoSubtitle:
-            "This block powers TikTok Studio. By default it is ready to analyze videos, images, and long URLs with Gemini 3.1 Pro Preview.",
-          inheritMode: "Inherit general engine",
-          dedicatedMode: "Use dedicated Gemini for video",
+          modelHint: "Recommended: Gemini 3.1 Pro for stronger generation and analysis quality.",
           regionTitle: "Viral trend territory",
           regionSubtitle:
             "The app queries by country when a source allows it and clearly marks when a source can only work as regional guidance.",
@@ -364,7 +354,7 @@ export default function SettingsPage() {
           defaultModel: "Default model",
           provider: "Provider",
           activeRegion: "Active territory",
-          activeVideoModel: "Video model",
+          activeModel: "Active model (app-wide)",
           regionGroup: "Block",
           itemsCount: "Items",
           status: "Status",
@@ -482,60 +472,14 @@ export default function SettingsPage() {
             </section>
 
             <section className="glass-panel rounded-3xl border border-white/10 p-6">
-              <h3 className="mt-2 font-headline text-2xl font-bold text-white">{copy.videoTitle}</h3>
-              <p className="mt-2 text-sm leading-7 text-slate-300">{copy.videoSubtitle}</p>
-
-              <div className="mt-6 grid gap-3 md:grid-cols-2">
-                <button
-                  className={`rounded-2xl border p-4 text-left transition ${
-                    settings.videoMode === "inherit-prompt-engine"
-                      ? "border-white/35 bg-white/10 text-white"
-                      : "border-white/10 bg-slate-950/35 text-slate-300 hover:border-white/20"
-                  }`}
-                  onClick={() => updateSetting("videoMode", "inherit-prompt-engine")}
-                >
-                  <p className="text-sm font-semibold">{copy.inheritMode}</p>
-                  <p className="mt-2 text-xs text-slate-400">{copy.promptTitle}</p>
-                </button>
-                <button
-                  className={`rounded-2xl border p-4 text-left transition ${
-                    settings.videoMode === "custom-gemini"
-                      ? "border-fuchsia-300/35 bg-fuchsia-400/10 text-white"
-                      : "border-white/10 bg-slate-950/35 text-slate-300 hover:border-white/20"
-                  }`}
-                  onClick={() => updateSetting("videoMode", "custom-gemini")}
-                >
-                  <p className="text-sm font-semibold">{copy.dedicatedMode}</p>
-                  <p className="mt-2 text-xs text-slate-400">{copy.videoSubtitle}</p>
-                </button>
-              </div>
-
-              <div className="mt-6 grid gap-5">
-                <label className="block">
-                  <span className="mb-2 block text-sm font-semibold text-slate-100">{copy.apiKey}</span>
-                  <input
-                    type="password"
-                    className="w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none transition focus:border-fuchsia-300/40"
-                    value={settings.videoApiKey}
-                    onChange={(event) => updateSetting("videoApiKey", event.target.value)}
-                    placeholder="AIza..."
-                  />
-                  <span className="mt-2 block text-xs text-slate-400">{copy.apiKeyHint}</span>
-                </label>
-
-                <label className="block">
-                  <span className="mb-2 block text-sm font-semibold text-slate-100">{copy.model}</span>
-                  <input
-                    className="w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none transition focus:border-fuchsia-300/40"
-                    value={settings.videoModel}
-                    onChange={(event) => updateSetting("videoModel", event.target.value)}
-                    placeholder={DEFAULT_PROMPT_ENGINE_SETTINGS.videoModel}
-                  />
-                  <span className="mt-2 block text-xs text-slate-400">
-                    {locale === "es" ? "Gemini 3.1 Pro Preview es el valor recomendado para esta sección." : "Gemini 3.1 Pro Preview is the recommended default here."}
-                  </span>
-                </label>
-              </div>
+              <h3 className="mt-2 font-headline text-2xl font-bold text-white">
+                {locale === "es" ? "Modelo compartido" : "Shared model"}
+              </h3>
+              <p className="mt-2 text-sm leading-7 text-slate-300">
+                {locale === "es"
+                  ? "Estudio TikTok y el generador de prompts usan exactamente el mismo modelo y la misma API key configurados arriba."
+                  : "TikTok Studio and prompt generation now use the exact same model and API key configured above."}
+              </p>
             </section>
 
             <section className="glass-panel rounded-3xl border border-white/10 p-6">
@@ -795,9 +739,9 @@ export default function SettingsPage() {
                 <p className="mt-1 text-lg font-semibold text-white">{locale === "es" ? selectedRegion.labelEs : selectedRegion.label}</p>
               </div>
               <div className="rounded-2xl border border-fuchsia-300/15 bg-fuchsia-400/10 p-4">
-                <p className="text-xs text-fuchsia-100">{copy.activeVideoModel}</p>
+                <p className="text-xs text-fuchsia-100">{copy.activeModel}</p>
                 <p className="mt-1 break-all text-lg font-semibold text-white">
-                  {settings.videoMode === "inherit-prompt-engine" ? settings.model || systemStatus?.default_model : settings.videoModel}
+                  {settings.model || systemStatus?.default_model}
                 </p>
               </div>
             </div>

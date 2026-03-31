@@ -158,7 +158,7 @@ export default function TikTokStudioPage() {
               {copy.region}: {region.label}
             </span>
             <span className="rounded-full border border-fuchsia-300/20 bg-fuchsia-400/10 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-fuchsia-100">
-              {copy.model}: {videoConfig?.model || settings.videoModel}
+              {copy.model}: {videoConfig?.model || settings.model}
             </span>
           </div>
           <h2 className="mt-4 font-headline text-3xl font-bold text-white">{copy.title}</h2>

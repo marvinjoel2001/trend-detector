@@ -237,9 +237,9 @@ export const DEFAULT_PROMPT_ENGINE_SETTINGS: PromptEngineSettings = {
   model: "gemini-1.5-flash",
   trendRegionCode: "US",
   trendRegionLabel: "United States",
-  videoMode: "custom-gemini",
+  videoMode: "inherit-prompt-engine",
   videoApiKey: "",
-  videoModel: "gemini-3.1-pro-preview",
+  videoModel: "gemini-1.5-flash",
 };
 
 function normalizePromptEngineSettings(raw: Partial<PromptEngineSettings> | null | undefined): PromptEngineSettings {
@@ -251,12 +251,10 @@ function normalizePromptEngineSettings(raw: Partial<PromptEngineSettings> | null
     model: typeof parsed.model === "string" && parsed.model.trim() ? parsed.model : DEFAULT_PROMPT_ENGINE_SETTINGS.model,
     trendRegionCode: region.code,
     trendRegionLabel: typeof parsed.trendRegionLabel === "string" && parsed.trendRegionLabel.trim() ? parsed.trendRegionLabel : region.label,
-    videoMode: parsed.videoMode === "inherit-prompt-engine" ? "inherit-prompt-engine" : "custom-gemini",
-    videoApiKey: typeof parsed.videoApiKey === "string" ? parsed.videoApiKey : "",
+    videoMode: "inherit-prompt-engine",
+    videoApiKey: "",
     videoModel:
-      typeof parsed.videoModel === "string" && parsed.videoModel.trim()
-        ? parsed.videoModel
-        : DEFAULT_PROMPT_ENGINE_SETTINGS.videoModel,
+      typeof parsed.model === "string" && parsed.model.trim() ? parsed.model : DEFAULT_PROMPT_ENGINE_SETTINGS.videoModel,
   };
 }
 
@@ -356,19 +354,7 @@ export function buildPromptGeneratorConfig(settings: PromptEngineSettings): Prom
 }
 
 export function buildVideoPromptGeneratorConfig(settings: PromptEngineSettings): PromptGeneratorConfig | undefined {
-  if (settings.videoMode === "inherit-prompt-engine") {
-    return buildPromptGeneratorConfig(settings);
-  }
-
-  const apiKey = settings.videoApiKey.trim();
-  const model = settings.videoModel.trim();
-  if (!apiKey && !model) return undefined;
-
-  return {
-    provider: "gemini",
-    api_key: apiKey || undefined,
-    model: model || undefined,
-  };
+  return buildPromptGeneratorConfig(settings);
 }
 
 export function buildGeoQuery(params: Record<string, string | number | boolean | undefined>, settings?: PromptEngineSettings): string {
