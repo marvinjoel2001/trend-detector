@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 
 import { AppShell } from "../../components/app-shell";
 import { api } from "../../lib/api";
@@ -9,6 +9,8 @@ import {
   buildVideoPromptGeneratorConfig,
   getTrendRegionOption,
   loadPromptEngineSettings,
+  PromptEngineSettings,
+  subscribePromptEngineSettings,
 } from "../../lib/prompt-engine-settings";
 import { MediaPromptResult } from "../../lib/types";
 
@@ -21,7 +23,10 @@ function formatBytes(value: number | null | undefined): string {
 
 export default function TikTokStudioPage() {
   const { language } = useI18n();
-  const settings = useMemo(() => loadPromptEngineSettings(), []);
+  const [settings, setSettings] = useState<PromptEngineSettings>(() => loadPromptEngineSettings());
+  useEffect(() => {
+    return subscribePromptEngineSettings(setSettings);
+  }, []);
   const region = getTrendRegionOption(settings.trendRegionCode);
   const videoConfig = buildVideoPromptGeneratorConfig(settings);
 

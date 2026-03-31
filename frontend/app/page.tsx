@@ -7,7 +7,14 @@ import { LoadingSkeleton } from "../components/loading-skeleton";
 import { TrendCard } from "../components/trend-card";
 import { api } from "../lib/api";
 import { useI18n } from "../lib/i18n";
-import { buildGeoQuery, buildPromptGeneratorConfig, getTrendRegionOption, loadPromptEngineSettings } from "../lib/prompt-engine-settings";
+import {
+  buildGeoQuery,
+  buildPromptGeneratorConfig,
+  getTrendRegionOption,
+  loadPromptEngineSettings,
+  PromptEngineSettings,
+  subscribePromptEngineSettings,
+} from "../lib/prompt-engine-settings";
 import { getTrendMedia } from "../lib/trend-media";
 import { PromptResult, SourceStatusResponse, Trend } from "../lib/types";
 
@@ -35,15 +42,20 @@ export default function DashboardPage() {
   const [prompt, setPrompt] = useState<PromptResult | null>(null);
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [promptSettings, setPromptSettings] = useState<PromptEngineSettings>(() => loadPromptEngineSettings());
   const [toasts, setToasts] = useState<
     Array<{ id: string; type: "warn" | "error"; text: string }>
   >([]);
-  const region = getTrendRegionOption(loadPromptEngineSettings().trendRegionCode);
+  const region = getTrendRegionOption(promptSettings.trendRegionCode);
+
+  useEffect(() => {
+    return subscribePromptEngineSettings(setPromptSettings);
+  }, []);
 
   useEffect(() => {
     async function loadDashboard() {
       try {
-        const data = await api.getTrendsWithStatus(buildGeoQuery({ limit: 50 }));
+        const data = await api.getTrendsWithStatus(buildGeoQuery({ limit: 50 }, promptSettings));
         const sortedItems = [...data.items].sort((a, b) => {
           const rankDiff = b.rank_score - a.rank_score;
           if (rankDiff !== 0) return rankDiff;
@@ -83,7 +95,7 @@ export default function DashboardPage() {
     }
 
     void loadDashboard();
-  }, []);
+  }, [promptSettings]);
 
   useEffect(() => {
     if (loading || error || trends.length || emptyRetryRef.current) return;
@@ -92,7 +104,7 @@ export default function DashboardPage() {
       setLoading(true);
       setError(null);
       api
-        .getTrendsWithStatus(buildGeoQuery({ limit: 50 }))
+        .getTrendsWithStatus(buildGeoQuery({ limit: 50 }, promptSettings))
         .then((data) => {
           const sortedItems = [...data.items].sort((a, b) => {
             const rankDiff = b.rank_score - a.rank_score;
@@ -107,7 +119,7 @@ export default function DashboardPage() {
         .finally(() => setLoading(false));
     }, 1800);
     return () => window.clearTimeout(timer);
-  }, [error, loading, trends.length]);
+  }, [error, loading, promptSettings, trends.length]);
 
   useEffect(() => {
     if (!toasts.length) return;
@@ -152,7 +164,7 @@ export default function DashboardPage() {
         platform_target: "tiktok",
         output_type: selectedOutputType,
         user_niche: "technology",
-        generator_config: buildPromptGeneratorConfig(loadPromptEngineSettings()),
+        generator_config: buildPromptGeneratorConfig(promptSettings),
       });
       setPrompt(result);
     } catch (err) {

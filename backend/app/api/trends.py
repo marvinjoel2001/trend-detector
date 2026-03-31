@@ -15,7 +15,7 @@ from app.services.cache import cache_get_json, cache_set_json
 from app.core.config import get_settings
 from app.services.forecast import generate_forecast
 from app.services.forecast_explainer import explain_forecast
-from app.services.geo_targets import normalize_geo_code
+from app.services.geo_targets import normalize_geo_code, resolve_geo_target
 from app.services.ingestion import run_ingestion_cycle
 
 router = APIRouter()
@@ -65,11 +65,20 @@ async def list_trends(
 
     filtered_trends = _filter(trends)
     if geo_code and not filtered_trends:
+        geo_target = resolve_geo_target(geo_code)
         refresh_sources: list[str] | None
         if platform:
-            refresh_sources = [] if geo_code != "US" and platform == "tiktok" else [platform]
+            if platform == "tiktok" and not geo_target.tiktok_supported:
+                refresh_sources = []
+            else:
+                refresh_sources = [platform]
         else:
-            refresh_sources = ["google", "youtube"] if geo_code != "US" else None
+            if geo_code == "US":
+                refresh_sources = None
+            else:
+                refresh_sources = ["google", "youtube"]
+                if geo_target.tiktok_supported:
+                    refresh_sources.append("tiktok")
 
         if refresh_sources is None or refresh_sources:
             await run_ingestion_cycle(

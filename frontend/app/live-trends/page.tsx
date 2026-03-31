@@ -6,7 +6,13 @@ import { AppShell } from "../../components/app-shell";
 import { LoadingSkeleton } from "../../components/loading-skeleton";
 import { api, wsLiveTrendsUrl } from "../../lib/api";
 import { useI18n } from "../../lib/i18n";
-import { buildGeoQuery, getTrendRegionOption, loadPromptEngineSettings } from "../../lib/prompt-engine-settings";
+import {
+  buildGeoQuery,
+  getTrendRegionOption,
+  loadPromptEngineSettings,
+  PromptEngineSettings,
+  subscribePromptEngineSettings,
+} from "../../lib/prompt-engine-settings";
 import { SourceStatusResponse, Trend } from "../../lib/types";
 
 type LiveEvent = {
@@ -84,7 +90,12 @@ export default function LiveTrendsPage() {
   const [lastHeartbeat, setLastHeartbeat] = useState<string>("");
   const [loadingSnapshot, setLoadingSnapshot] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const region = getTrendRegionOption(loadPromptEngineSettings().trendRegionCode);
+  const [promptSettings, setPromptSettings] = useState<PromptEngineSettings>(() => loadPromptEngineSettings());
+  const region = getTrendRegionOption(promptSettings.trendRegionCode);
+
+  useEffect(() => {
+    return subscribePromptEngineSettings(setPromptSettings);
+  }, []);
 
   const copy =
     language === "es"
@@ -183,7 +194,7 @@ export default function LiveTrendsPage() {
     let cancelled = false;
 
     api
-      .getTrendsWithStatus(buildGeoQuery({ limit: 12 }))
+      .getTrendsWithStatus(buildGeoQuery({ limit: 12 }, promptSettings))
       .then((data) => {
         if (cancelled) return;
         setTrends(data.items || []);
@@ -201,7 +212,7 @@ export default function LiveTrendsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [promptSettings]);
 
   useEffect(() => {
     let active = true;

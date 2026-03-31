@@ -19,7 +19,7 @@ settings = get_settings()
 _media_probe_cache: dict[str, bool] = {}
 
 PROMPT_FEED_SOURCES = ("lexica", "prompthero", "krea", "github", "civitai", "youtube", "reddit", "tiktok")
-PROMPT_FEED_FEED_SOURCES = ("prompthero", "krea", "github", "civitai", "youtube", "reddit", "tiktok")
+PROMPT_FEED_FEED_SOURCES = ("lexica", "prompthero", "krea", "github", "civitai", "youtube", "reddit", "tiktok")
 SOCIAL_PROMPT_FEED_SOURCES = ("youtube", "reddit", "tiktok")
 
 
@@ -373,14 +373,15 @@ async def _collect_social_feed(source: str, limit: int) -> tuple[list[dict[str, 
 
 
 def _collect_lexica(query: str, limit: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    normalized_query = query.strip()
-    if not normalized_query:
-        return [], _source_status("lexica", configured=True, enabled=False, items_count=0, message="missing_query")
-    endpoint = f"{settings.lexica_api_base_url.rstrip('/')}/search"
+    normalized_query = query.strip().lower()
+    endpoint_base = settings.lexica_api_base_url.rstrip("/")
+    if endpoint_base.endswith("/v1"):
+        endpoint_base = endpoint_base[:-3]
+    endpoint = f"{endpoint_base}/infinite-prompts"
     try:
         payload = _safe_json_request(
             endpoint,
-            params={"q": normalized_query},
+            params=None,
             headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"},
             timeout=20,
         )
@@ -390,31 +391,62 @@ def _collect_lexica(query: str, limit: int) -> tuple[list[dict[str, Any]], dict[
     except Exception as exc:  # noqa: BLE001
         return [], _source_status("lexica", configured=True, enabled=False, items_count=0, message=f"failed: {exc}")
     images = payload.get("images") if isinstance(payload, dict) else []
+    prompts = payload.get("prompts") if isinstance(payload, dict) else []
+
+    prompt_by_id: dict[str, str] = {}
+    prompt_by_image_id: dict[str, str] = {}
+
+    if isinstance(prompts, list):
+        for prompt_entry in prompts:
+            if not isinstance(prompt_entry, dict):
+                continue
+            prompt_id = _trim(prompt_entry.get("id"))
+            prompt_text = _trim(prompt_entry.get("prompt") or prompt_entry.get("cleanedPrompt"))
+            if prompt_id and prompt_text:
+                prompt_by_id[prompt_id] = prompt_text
+            images_for_prompt = prompt_entry.get("images")
+            if isinstance(images_for_prompt, list) and prompt_text:
+                for prompt_image in images_for_prompt:
+                    if not isinstance(prompt_image, dict):
+                        continue
+                    prompt_image_id = _trim(prompt_image.get("id"))
+                    if prompt_image_id:
+                        prompt_by_image_id[prompt_image_id] = prompt_text
+
     items = []
-    for image in (images or [])[:limit]:
+    for image in (images or []):
         if not isinstance(image, dict):
             continue
-        prompt = str(image.get("prompt") or "").strip()
+        image_id = _trim(image.get("id"))
+        prompt_id = _trim(image.get("promptid"))
+        prompt = _trim(prompt_by_id.get(prompt_id) or prompt_by_image_id.get(image_id) or image.get("prompt"))
+
+        if normalized_query and normalized_query not in prompt.lower():
+            continue
+
+        image_url = f"https://image.lexica.art/md2/{image_id}" if image_id else None
+
         items.append(
             _build_feed_item(
                 source="lexica",
-                external_id=str(image.get("id") or ""),
+                external_id=image_id,
                 title=_title_from_prompt(prompt, "Lexica prompt"),
                 prompt=prompt,
-                image_url=_normalize_media_url(image.get("src")),
-                thumbnail_url=_normalize_media_url(image.get("srcSmall")) or _normalize_media_url(image.get("src")),
-                source_url=_normalize_media_url(image.get("gallery")),
-                model=str(image.get("model") or "").strip() or None,
+                image_url=image_url,
+                thumbnail_url=image_url,
+                source_url=f"https://lexica.art/prompt/{prompt_id}" if prompt_id else None,
+                model=_trim(image.get("model_mode") or image.get("model")) or None,
                 width=int(image["width"]) if isinstance(image.get("width"), int) else None,
                 height=int(image["height"]) if isinstance(image.get("height"), int) else None,
                 metadata={
-                    "seed": image.get("seed"),
-                    "guidance": image.get("guidance"),
-                    "prompt_id": image.get("promptid"),
-                    "nsfw": image.get("nsfw"),
+                    "prompt_id": prompt_id or None,
+                    "raw_mode": image.get("raw_mode"),
+                    "image_prompt_strength": image.get("image_prompt_strength"),
                 },
             )
         )
+        if len(items) >= limit:
+            break
     return items, _source_status("lexica", configured=True, enabled=True, items_count=len(items), message="ok")
 
 
@@ -843,6 +875,14 @@ def get_prompt_feed_config() -> dict[str, Any]:
         "default_query": "",
         "github_defaults": github_defaults,
         "sources": [
+            {
+                "source": "lexica",
+                "configured": True,
+                "enabled": True,
+                "requires_api_key": False,
+                "base_url": settings.lexica_api_base_url,
+                "note": "Public infinite prompts feed from Lexica",
+            },
             {
                 "source": "prompthero",
                 "configured": bool(_trim(settings.prompthero_bearer_token)),

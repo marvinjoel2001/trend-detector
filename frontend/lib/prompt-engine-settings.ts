@@ -224,6 +224,7 @@ export const TREND_REGION_OPTIONS: TrendRegionOption[] = [
 ];
 
 export const PROMPT_ENGINE_SETTINGS_STORAGE_KEY = "trendprompt_prompt_engine_settings";
+export const PROMPT_ENGINE_SETTINGS_UPDATED_EVENT = "trendprompt:prompt-engine-settings-updated";
 
 export const DEFAULT_PROMPT_ENGINE_SETTINGS: PromptEngineSettings = {
   mode: "system",
@@ -235,6 +236,24 @@ export const DEFAULT_PROMPT_ENGINE_SETTINGS: PromptEngineSettings = {
   videoApiKey: "",
   videoModel: "gemini-3.1-pro-preview",
 };
+
+function normalizePromptEngineSettings(raw: Partial<PromptEngineSettings> | null | undefined): PromptEngineSettings {
+  const parsed = raw || {};
+  const region = getTrendRegionOption(parsed.trendRegionCode || DEFAULT_PROMPT_ENGINE_SETTINGS.trendRegionCode);
+  return {
+    mode: parsed.mode === "custom-gemini" ? "custom-gemini" : "system",
+    apiKey: typeof parsed.apiKey === "string" ? parsed.apiKey : "",
+    model: typeof parsed.model === "string" && parsed.model.trim() ? parsed.model : DEFAULT_PROMPT_ENGINE_SETTINGS.model,
+    trendRegionCode: region.code,
+    trendRegionLabel: typeof parsed.trendRegionLabel === "string" && parsed.trendRegionLabel.trim() ? parsed.trendRegionLabel : region.label,
+    videoMode: parsed.videoMode === "inherit-prompt-engine" ? "inherit-prompt-engine" : "custom-gemini",
+    videoApiKey: typeof parsed.videoApiKey === "string" ? parsed.videoApiKey : "",
+    videoModel:
+      typeof parsed.videoModel === "string" && parsed.videoModel.trim()
+        ? parsed.videoModel
+        : DEFAULT_PROMPT_ENGINE_SETTINGS.videoModel,
+  };
+}
 
 export function getTrendRegionOption(code: string | undefined): TrendRegionOption {
   const normalized = `${code || ""}`.trim().toUpperCase();
@@ -276,21 +295,7 @@ export function loadPromptEngineSettings(): PromptEngineSettings {
     const raw = window.localStorage.getItem(PROMPT_ENGINE_SETTINGS_STORAGE_KEY);
     if (!raw) return DEFAULT_PROMPT_ENGINE_SETTINGS;
     const parsed = JSON.parse(raw) as Partial<PromptEngineSettings>;
-    const region = getTrendRegionOption(parsed.trendRegionCode || DEFAULT_PROMPT_ENGINE_SETTINGS.trendRegionCode);
-    return {
-      mode: parsed.mode === "custom-gemini" ? "custom-gemini" : "system",
-      apiKey: typeof parsed.apiKey === "string" ? parsed.apiKey : "",
-      model: typeof parsed.model === "string" && parsed.model.trim() ? parsed.model : DEFAULT_PROMPT_ENGINE_SETTINGS.model,
-      trendRegionCode: region.code,
-      trendRegionLabel:
-        typeof parsed.trendRegionLabel === "string" && parsed.trendRegionLabel.trim() ? parsed.trendRegionLabel : region.label,
-      videoMode: parsed.videoMode === "inherit-prompt-engine" ? "inherit-prompt-engine" : "custom-gemini",
-      videoApiKey: typeof parsed.videoApiKey === "string" ? parsed.videoApiKey : "",
-      videoModel:
-        typeof parsed.videoModel === "string" && parsed.videoModel.trim()
-          ? parsed.videoModel
-          : DEFAULT_PROMPT_ENGINE_SETTINGS.videoModel,
-    };
+    return normalizePromptEngineSettings(parsed);
   } catch {
     return DEFAULT_PROMPT_ENGINE_SETTINGS;
   }
@@ -298,7 +303,37 @@ export function loadPromptEngineSettings(): PromptEngineSettings {
 
 export function savePromptEngineSettings(settings: PromptEngineSettings): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(PROMPT_ENGINE_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  const normalized = normalizePromptEngineSettings(settings);
+  window.localStorage.setItem(PROMPT_ENGINE_SETTINGS_STORAGE_KEY, JSON.stringify(normalized));
+  window.dispatchEvent(new CustomEvent(PROMPT_ENGINE_SETTINGS_UPDATED_EVENT, { detail: normalized }));
+}
+
+export function subscribePromptEngineSettings(listener: (settings: PromptEngineSettings) => void): () => void {
+  if (typeof window === "undefined") {
+    return () => undefined;
+  }
+
+  const onCustomUpdate = (event: Event) => {
+    const customEvent = event as CustomEvent<PromptEngineSettings>;
+    if (customEvent.detail) {
+      listener(normalizePromptEngineSettings(customEvent.detail));
+      return;
+    }
+    listener(loadPromptEngineSettings());
+  };
+
+  const onStorage = (event: StorageEvent) => {
+    if (event.key !== PROMPT_ENGINE_SETTINGS_STORAGE_KEY) return;
+    listener(loadPromptEngineSettings());
+  };
+
+  window.addEventListener(PROMPT_ENGINE_SETTINGS_UPDATED_EVENT, onCustomUpdate);
+  window.addEventListener("storage", onStorage);
+
+  return () => {
+    window.removeEventListener(PROMPT_ENGINE_SETTINGS_UPDATED_EVENT, onCustomUpdate);
+    window.removeEventListener("storage", onStorage);
+  };
 }
 
 export function buildPromptGeneratorConfig(settings: PromptEngineSettings): PromptGeneratorConfig | undefined {

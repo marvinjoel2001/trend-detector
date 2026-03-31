@@ -381,11 +381,15 @@ export default function SettingsPage() {
   function handleRegionChange(code: string) {
     const option = getTrendRegionOption(code);
     setPreviewLoading(true);
-    setSettings((prev) => ({
-      ...prev,
-      trendRegionCode: option.code,
-      trendRegionLabel: option.label,
-    }));
+    setSettings((prev) => {
+      const next = {
+        ...prev,
+        trendRegionCode: option.code,
+        trendRegionLabel: option.label,
+      };
+      savePromptEngineSettings(next);
+      return next;
+    });
     setStatusMessage("");
   }
 

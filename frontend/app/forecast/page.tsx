@@ -7,7 +7,14 @@ import { LoadingSkeleton } from "../../components/loading-skeleton";
 import { SimpleLineChart } from "../../components/simple-line-chart";
 import { api } from "../../lib/api";
 import { useI18n } from "../../lib/i18n";
-import { buildGeoQuery, buildPromptGeneratorConfig, getTrendRegionOption, loadPromptEngineSettings } from "../../lib/prompt-engine-settings";
+import {
+  buildGeoQuery,
+  buildPromptGeneratorConfig,
+  getTrendRegionOption,
+  loadPromptEngineSettings,
+  PromptEngineSettings,
+  subscribePromptEngineSettings,
+} from "../../lib/prompt-engine-settings";
 import { ForecastExplanation, ForecastResponse, Trend, TrendDetailResponse } from "../../lib/types";
 
 function compactNumber(value: number): string {
@@ -26,7 +33,12 @@ export default function ForecastPage() {
   const [loading, setLoading] = useState(true);
   const [forecastLoading, setForecastLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const region = getTrendRegionOption(loadPromptEngineSettings().trendRegionCode);
+  const [promptSettings, setPromptSettings] = useState<PromptEngineSettings>(() => loadPromptEngineSettings());
+  const region = getTrendRegionOption(promptSettings.trendRegionCode);
+
+  useEffect(() => {
+    return subscribePromptEngineSettings(setPromptSettings);
+  }, []);
 
   const copy =
     language === "es"
@@ -81,14 +93,14 @@ export default function ForecastPage() {
 
   useEffect(() => {
     api
-      .getTrends(buildGeoQuery({ limit: 20 }))
+      .getTrends(buildGeoQuery({ limit: 20 }, promptSettings))
       .then((data) => {
         setTrends(data);
         if (data[0]) setSelected(data[0].id);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [promptSettings]);
 
   useEffect(() => {
     if (!selected) return;
@@ -108,7 +120,7 @@ export default function ForecastPage() {
       api.explainForecast({
         trend_id: selected,
         language,
-        generator_config: buildPromptGeneratorConfig(loadPromptEngineSettings()),
+        generator_config: buildPromptGeneratorConfig(promptSettings),
       }),
     ])
       .then(([detailResult, forecastResult, explanationResult]) => {
@@ -138,7 +150,7 @@ export default function ForecastPage() {
     return () => {
       active = false;
     };
-  }, [selected, language]);
+  }, [selected, language, promptSettings]);
 
   const historicalSnapshots = detail?.snapshots.slice(-12).reverse() || [];
   const historicalValues = historicalSnapshots.map((snapshot) => snapshot.metric_views);

@@ -12,6 +12,8 @@ const PAGE_SIZE = 24;
 
 function sourceTone(source: string): string {
   switch (source) {
+    case "lexica":
+      return "border-sky-300/25 bg-sky-400/10 text-sky-100";
     case "prompthero":
       return "border-fuchsia-300/25 bg-fuchsia-400/10 text-fuchsia-100";
     case "krea":
@@ -119,6 +121,7 @@ export default function PromptFeedPage() {
             "Aqui mezclamos lo que encontremos en PromptHero, Krea, Civitai, GitHub, YouTube, Reddit y TikTok. Cuando una fuente social no trae prompt original, generamos un prompt de referencia util basado en el contenido visible.",
           source: "Fuente",
           allSources: "Todas",
+          lexica: "Lexica",
           prompthero: "PromptHero",
           krea: "Krea",
           civitai: "Civitai",
@@ -164,6 +167,7 @@ export default function PromptFeedPage() {
             "This view mixes whatever we can pull from PromptHero, Krea, Civitai, GitHub, YouTube, Reddit, and TikTok. When a social source does not expose an original prompt, the app builds a useful reference prompt from the visible content.",
           source: "Source",
           allSources: "All",
+          lexica: "Lexica",
           prompthero: "PromptHero",
           krea: "Krea",
           civitai: "Civitai",
@@ -379,6 +383,7 @@ export default function PromptFeedPage() {
                     onChange={(event) => setSource(event.target.value)}
                   >
                     <option value="all">{copy.allSources}</option>
+                    <option value="lexica">{copy.lexica}</option>
                     <option value="prompthero">{copy.prompthero}</option>
                     <option value="krea">{copy.krea}</option>
                     <option value="civitai">{copy.civitai}</option>
