@@ -240,7 +240,9 @@ def _social_source_config(source: str) -> tuple[bool, bool, str]:
         configured = bool(_trim(settings.reddit_client_id)) and bool(_trim(settings.reddit_client_secret))
         return configured, True, "Hot Reddit posts with preview images or videos"
     if source == "tiktok":
-        return True, True, "TikTok discover scrape with post and hashtag previews"
+        if _trim(settings.apify_api_token):
+            return True, True, "TikTok trend feed via Apify with live video, sound, and hashtag previews"
+        return True, True, "TikTok trend feed with Playwright fallback previews"
     return True, True, "Social visual source"
 
 

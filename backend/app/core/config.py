@@ -45,6 +45,12 @@ class Settings(BaseSettings):
     source_interval_tiktok_minutes: int = 60
 
     youtube_api_key: str | None = None
+    apify_api_base_url: str = "https://api.apify.com"
+    apify_api_token: str | None = None
+    apify_tiktok_actor_id: str = "novi/fast-tiktok-scraper"
+    apify_request_timeout_seconds: int = 240
+    apify_run_sync_timeout_seconds: int = 180
+    apify_tiktok_limit: int = 18
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-1.5-flash"
     prompt_feed_cache_ttl: int = 900

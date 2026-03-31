@@ -12,14 +12,24 @@ type TrendCardProps = {
 };
 
 export function TrendCard({ trend, onSelectForPrompt }: TrendCardProps) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const velocity = Math.round(trend.velocity_score * 100) / 100;
   const media = getTrendMedia(trend);
   const hashtag =
     typeof trend.metadata?.hashtag === "string"
       ? trend.metadata.hashtag.trim()
       : "";
+  const soundTitle =
+    typeof trend.metadata?.sound_title === "string"
+      ? trend.metadata.sound_title.trim()
+      : "";
+  const creatorHandleRaw =
+    typeof trend.metadata?.creator_handle === "string"
+      ? trend.metadata.creator_handle.trim()
+      : "";
+  const creatorHandle = creatorHandleRaw.replace(/^@+/, "");
   const isTikTok = trend.platform.toLowerCase() === "tiktok";
+  const isYouTube = trend.platform.toLowerCase() === "youtube";
   const mainTitle = isTikTok && hashtag ? hashtag : trend.title;
   const subtitle =
     isTikTok && hashtag && trend.title !== hashtag ? trend.title : null;
@@ -29,6 +39,15 @@ export function TrendCard({ trend, onSelectForPrompt }: TrendCardProps) {
   const canOpenPromptModal = Boolean(
     onSelectForPrompt && (media.videoUrl || media.embedUrl || media.imageUrl),
   );
+  const useStaticPromptPreview = isYouTube && canOpenPromptModal;
+  const imagePreview = media.imageUrl ? (
+    <img
+      className="h-auto w-full bg-black/40 object-contain"
+      src={media.imageUrl}
+      aria-label={t("preview")}
+      alt={trend.title}
+    />
+  ) : null;
 
   function handleOpenPromptModal() {
     if (!onSelectForPrompt || !canOpenPromptModal) return;
@@ -55,6 +74,13 @@ export function TrendCard({ trend, onSelectForPrompt }: TrendCardProps) {
               {hashtag}
             </span>
           ) : null}
+          {isTikTok && (soundTitle || creatorHandle) ? (
+            <p className="mt-2 max-w-xs text-xs text-slate-300 line-clamp-2">
+              {language === "es" ? "Sonido" : "Sound"}:{" "}
+              {soundTitle || (language === "es" ? "original" : "original")}
+              {creatorHandle ? ` · @${creatorHandle}` : ""}
+            </p>
+          ) : null}
         </div>
         <div className="rounded-md bg-black/35 px-2 py-1 text-xs text-slate-200">
           {Math.round(trend.rank_score)} / 100
@@ -77,7 +103,25 @@ export function TrendCard({ trend, onSelectForPrompt }: TrendCardProps) {
             : undefined
         }
       >
-        {media.videoUrl ? (
+        {useStaticPromptPreview ? (
+          imagePreview ? (
+            <div className="group relative">
+              {imagePreview}
+              <div className="pointer-events-none absolute inset-0 flex items-end justify-between bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4">
+                <span className="rounded-full border border-white/20 bg-black/35 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white">
+                  YouTube
+                </span>
+                <span className="rounded-full border border-cyan-300/35 bg-cyan-400/20 px-3 py-1 text-[11px] font-semibold text-cyan-50 backdrop-blur">
+                  {t("generatePrompt")}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex min-h-40 items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.15),_transparent_60%)] p-6 text-xs text-slate-300">
+              {t("generatePrompt")}
+            </div>
+          )
+        ) : media.videoUrl ? (
           <video
             className="h-auto w-full bg-black/40 object-contain"
             src={media.videoUrl}
@@ -94,13 +138,8 @@ export function TrendCard({ trend, onSelectForPrompt }: TrendCardProps) {
               allowFullScreen
             />
           </div>
-        ) : media.imageUrl ? (
-          <img
-            className="h-auto w-full bg-black/40 object-contain"
-            src={media.imageUrl}
-            aria-label={t("preview")}
-            alt={trend.title}
-          />
+        ) : imagePreview ? (
+          imagePreview
         ) : (
           <div className="flex min-h-40 items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.15),_transparent_60%)] p-6 text-xs text-slate-300">
             {t("noPreviewAvailable")}

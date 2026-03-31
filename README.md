@@ -8,7 +8,7 @@ Trend ingestion and prompt engine using FastAPI + PostgreSQL + Redis + Celery + 
   - `youtube_scraper.py` (YouTube Data API v3)
   - `google_trends.py` (pytrends + Google RSS backup)
   - `reddit_scraper.py` (PRAW)
-  - `tiktok_scraper.py` (Playwright scraping)
+  - `tiktok_scraper.py` (Apify primary + Playwright fallback)
 - Velocity engine with snapshot persistence in `trend_snapshots`
 - Trend categorization using spaCy (with keyword fallback)
 - Prompt Generator Engine (`/api/prompt/generate`)
@@ -43,6 +43,10 @@ Create a `.env` file in project root.
 ```env
 # Required for YouTube real ingestion
 YOUTUBE_API_KEY=your_youtube_api_key
+
+# Recommended for TikTok regional live ingestion
+APIFY_API_TOKEN=your_apify_api_token
+APIFY_TIKTOK_ACTOR_ID=novi/fast-tiktok-scraper
 
 # Required for Reddit real ingestion
 REDDIT_CLIENT_ID=your_reddit_client_id
@@ -92,6 +96,8 @@ Deploy as multiple Railway services (recommended):
   - `USE_CELERY=true`
   - `CORS_ORIGINS=https://<your-frontend-domain>`
   - `YOUTUBE_API_KEY=<your_youtube_key>`
+  - `APIFY_API_TOKEN=<your_apify_token>`
+  - `APIFY_TIKTOK_ACTOR_ID=novi/fast-tiktok-scraper`
   - `TIKTOK_HEADLESS=true`
   - Optional:
     - `REDDIT_CLIENT_ID`

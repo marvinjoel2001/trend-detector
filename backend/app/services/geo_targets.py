@@ -31,6 +31,7 @@ _PRESET_TARGETS: dict[str, GeoTarget] = {
         youtube_region="BO",
         tiktok_country="BO",
         accept_language="es-BO,es-419;q=0.9,en;q=0.7",
+        tiktok_supported=True,
     ),
     "AR": GeoTarget(
         code="AR",
@@ -75,6 +76,7 @@ _PRESET_TARGETS: dict[str, GeoTarget] = {
         youtube_region="EC",
         tiktok_country="EC",
         accept_language="es-EC,es-419;q=0.9,en;q=0.7",
+        tiktok_supported=True,
     ),
     "ES": GeoTarget(
         code="ES",
@@ -110,6 +112,7 @@ _PRESET_TARGETS: dict[str, GeoTarget] = {
         youtube_region="PY",
         tiktok_country="PY",
         accept_language="es-PY,es-419;q=0.9,en;q=0.7",
+        tiktok_supported=True,
     ),
     "UY": GeoTarget(
         code="UY",
@@ -118,6 +121,7 @@ _PRESET_TARGETS: dict[str, GeoTarget] = {
         youtube_region="UY",
         tiktok_country="UY",
         accept_language="es-UY,es-419;q=0.9,en;q=0.7",
+        tiktok_supported=True,
     ),
     "VE": GeoTarget(
         code="VE",
@@ -126,6 +130,7 @@ _PRESET_TARGETS: dict[str, GeoTarget] = {
         youtube_region="VE",
         tiktok_country="VE",
         accept_language="es-VE,es-419;q=0.9,en;q=0.7",
+        tiktok_supported=True,
     ),
 }
 

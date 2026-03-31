@@ -54,7 +54,7 @@ function describeCapability(
         : "YouTube entra como aproximacion.";
     }
     return level === "exact"
-      ? "Creative Center publica esta zona y se intenta respetar por pais."
+      ? "Usa TikTok via Apify con filtro por pais y metadatos reales de video, sonido y hashtags."
       : "TikTok no ofrece un feed publico estable por esta zona; se toma como referencia regional.";
   }
 
@@ -69,7 +69,7 @@ function describeCapability(
       : "YouTube is treated as best effort.";
   }
   return level === "exact"
-    ? "Creative Center publishes this territory and the fetch attempts to respect that country."
+    ? "Uses TikTok via Apify with country targeting and live video, sound, and hashtag metadata."
     : "TikTok does not expose a stable public feed for this territory, so it is treated as regional guidance.";
 }
 

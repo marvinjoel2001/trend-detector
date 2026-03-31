@@ -50,20 +50,25 @@ export const TREND_REGION_GROUPS: Array<{
 ];
 
 export const SOUTH_AMERICA_MAP_CODES = ["CO", "VE", "EC", "PE", "BR", "BO", "PY", "CL", "AR", "UY"] as const;
+const EXACT_REGION_CAPABILITIES = {
+  google: "exact",
+  youtube: "exact",
+  tiktok: "exact",
+} as const;
 
 export const TREND_REGION_OPTIONS: TrendRegionOption[] = [
   {
     code: "BO",
     label: "Bolivia",
     labelEs: "Bolivia",
-    hintEs: "Google y YouTube por Bolivia; TikTok solo como aproximacion regional.",
-    hintEn: "Google and YouTube for Bolivia; TikTok stays regional best effort.",
+    hintEs: "Google, YouTube y TikTok filtrados por Bolivia con feed real.",
+    hintEn: "Google, YouTube, and TikTok filtered for Bolivia with a live feed.",
     group: "south-america",
     mapLabel: "BO",
     searchTerms: ["bolivia", "la paz", "santa cruz", "cochabamba", "sudamerica", "south america"],
     mapCoordinates: { lon: -64.7, lat: -16.3 },
     markerOffset: { x: 16, y: 0 },
-    capabilities: { google: "exact", youtube: "exact", tiktok: "best-effort" },
+    capabilities: EXACT_REGION_CAPABILITIES,
   },
   {
     code: "AR",
@@ -76,7 +81,7 @@ export const TREND_REGION_OPTIONS: TrendRegionOption[] = [
     searchTerms: ["argentina", "buenos aires", "sudamerica", "south america"],
     mapCoordinates: { lon: -63.6, lat: -38.4 },
     markerOffset: { x: 12, y: 18 },
-    capabilities: { google: "exact", youtube: "exact", tiktok: "best-effort" },
+    capabilities: EXACT_REGION_CAPABILITIES,
   },
   {
     code: "BR",
@@ -89,7 +94,7 @@ export const TREND_REGION_OPTIONS: TrendRegionOption[] = [
     searchTerms: ["brazil", "brasil", "rio", "sao paulo", "sudamerica", "south america"],
     mapCoordinates: { lon: -51.9, lat: -14.2 },
     markerOffset: { x: 26, y: -6 },
-    capabilities: { google: "exact", youtube: "exact", tiktok: "best-effort" },
+    capabilities: EXACT_REGION_CAPABILITIES,
   },
   {
     code: "CL",
@@ -102,7 +107,7 @@ export const TREND_REGION_OPTIONS: TrendRegionOption[] = [
     searchTerms: ["chile", "santiago", "sudamerica", "south america"],
     mapCoordinates: { lon: -71.5, lat: -35.7 },
     markerOffset: { x: -18, y: 10 },
-    capabilities: { google: "exact", youtube: "exact", tiktok: "best-effort" },
+    capabilities: EXACT_REGION_CAPABILITIES,
   },
   {
     code: "CO",
@@ -115,7 +120,7 @@ export const TREND_REGION_OPTIONS: TrendRegionOption[] = [
     searchTerms: ["colombia", "bogota", "medellin", "sudamerica", "south america"],
     mapCoordinates: { lon: -74, lat: 4 },
     markerOffset: { x: 10, y: -16 },
-    capabilities: { google: "exact", youtube: "exact", tiktok: "best-effort" },
+    capabilities: EXACT_REGION_CAPABILITIES,
   },
   {
     code: "EC",
@@ -128,7 +133,7 @@ export const TREND_REGION_OPTIONS: TrendRegionOption[] = [
     searchTerms: ["ecuador", "quito", "guayaquil", "sudamerica", "south america"],
     mapCoordinates: { lon: -78.2, lat: -1.5 },
     markerOffset: { x: -4, y: -2 },
-    capabilities: { google: "exact", youtube: "exact", tiktok: "best-effort" },
+    capabilities: EXACT_REGION_CAPABILITIES,
   },
   {
     code: "PY",
@@ -141,7 +146,7 @@ export const TREND_REGION_OPTIONS: TrendRegionOption[] = [
     searchTerms: ["paraguay", "asuncion", "sudamerica", "south america"],
     mapCoordinates: { lon: -58.4, lat: -23.4 },
     markerOffset: { x: 14, y: 16 },
-    capabilities: { google: "exact", youtube: "exact", tiktok: "best-effort" },
+    capabilities: EXACT_REGION_CAPABILITIES,
   },
   {
     code: "PE",
@@ -154,7 +159,7 @@ export const TREND_REGION_OPTIONS: TrendRegionOption[] = [
     searchTerms: ["peru", "lima", "sudamerica", "south america"],
     mapCoordinates: { lon: -75, lat: -9.2 },
     markerOffset: { x: -20, y: 2 },
-    capabilities: { google: "exact", youtube: "exact", tiktok: "best-effort" },
+    capabilities: EXACT_REGION_CAPABILITIES,
   },
   {
     code: "UY",
@@ -167,7 +172,7 @@ export const TREND_REGION_OPTIONS: TrendRegionOption[] = [
     searchTerms: ["uruguay", "montevideo", "sudamerica", "south america"],
     mapCoordinates: { lon: -56, lat: -32.8 },
     markerOffset: { x: 30, y: 18 },
-    capabilities: { google: "exact", youtube: "exact", tiktok: "best-effort" },
+    capabilities: EXACT_REGION_CAPABILITIES,
   },
   {
     code: "VE",
@@ -180,7 +185,7 @@ export const TREND_REGION_OPTIONS: TrendRegionOption[] = [
     searchTerms: ["venezuela", "caracas", "sudamerica", "south america"],
     mapCoordinates: { lon: -66, lat: 7 },
     markerOffset: { x: 28, y: -18 },
-    capabilities: { google: "exact", youtube: "exact", tiktok: "best-effort" },
+    capabilities: EXACT_REGION_CAPABILITIES,
   },
   {
     code: "MX",
@@ -193,7 +198,7 @@ export const TREND_REGION_OPTIONS: TrendRegionOption[] = [
     searchTerms: ["mexico", "cdmx", "north america", "latam"],
     mapCoordinates: { lon: -102, lat: 23 },
     markerOffset: { x: -10, y: 18 },
-    capabilities: { google: "exact", youtube: "exact", tiktok: "best-effort" },
+    capabilities: EXACT_REGION_CAPABILITIES,
   },
   {
     code: "US",
@@ -206,7 +211,7 @@ export const TREND_REGION_OPTIONS: TrendRegionOption[] = [
     searchTerms: ["united states", "usa", "us", "north america"],
     mapCoordinates: { lon: -98, lat: 39 },
     markerOffset: { x: 0, y: 0 },
-    capabilities: { google: "exact", youtube: "exact", tiktok: "best-effort" },
+    capabilities: EXACT_REGION_CAPABILITIES,
   },
   {
     code: "ES",
@@ -219,7 +224,7 @@ export const TREND_REGION_OPTIONS: TrendRegionOption[] = [
     searchTerms: ["spain", "espana", "madrid", "barcelona", "europe"],
     mapCoordinates: { lon: -3.7, lat: 40.3 },
     markerOffset: { x: 0, y: 0 },
-    capabilities: { google: "exact", youtube: "exact", tiktok: "best-effort" },
+    capabilities: EXACT_REGION_CAPABILITIES,
   },
 ];
 
